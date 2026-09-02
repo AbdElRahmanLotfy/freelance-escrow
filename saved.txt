@@ -1,1 +1,0 @@
- "test": "hardhat build && mocha --require tsx test/**/*.test.ts",
