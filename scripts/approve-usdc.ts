@@ -10,7 +10,7 @@ async function main() {
     throw new Error("ESCROW_ADDRESS not set in .env");
   }
 
-  const usdcAddress = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238";
+  const usdcAddress = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 
   const usdc = await viem.getContractAt("MockERC20", usdcAddress);
 

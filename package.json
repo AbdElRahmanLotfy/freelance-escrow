@@ -5,11 +5,13 @@
   "scripts": {
     "test": "hardhat test",
     "test:verbose": "hardhat test --verbose",
-    "deploy": "hardhat ignition deploy ignition/modules/Escrow.ts --network sepolia",
-    "verify": "hardhat ignition verify --network sepolia",
-    "check-balance": "hardhat run scripts/check-balance.ts --network sepolia",
-    "approve": "hardhat run scripts/approve-usdc.ts --network sepolia",
-    "fund": "hardhat run scripts/fund-escrow.ts --network sepolia",
+    "deploy:sepolia": "hardhat ignition deploy ignition/modules/Escrow.ts --network sepolia",
+    "deploy:base": "hardhat ignition deploy ignition/modules/EscrowBase.ts --network baseSepolia",
+    "verify:sepolia": "hardhat ignition verify --network sepolia",
+    "verify:base": "hardhat ignition verify --network baseSepolia",
+    "check-balance": "hardhat run scripts/check-balance.ts --network baseSepolia",
+    "approve": "hardhat run scripts/approve-usdc.ts --network baseSepolia",
+    "fund": "hardhat run scripts/fund-escrow.ts --network baseSepolia",
     "clean": "hardhat clean",
     "compile": "hardhat compile"
   },
@@ -28,6 +30,7 @@
     "viem": "^2.55.19"
   },
   "dependencies": {
+    "@aave-dao/aave-address-book": "^4.70.0",
     "@openzeppelin/contracts": "^5.6.1",
     "dotenv": "^17.4.2",
     "ethers": "^6.17.0"
