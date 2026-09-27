@@ -11,7 +11,9 @@
     "verify:base": "hardhat ignition verify --network baseSepolia",
     "check-balance": "hardhat run scripts/check-balance.ts --network baseSepolia",
     "approve": "hardhat run scripts/approve-usdc.ts --network baseSepolia",
+    "create-escrow": "hardhat run scripts/create-escrow.ts --network baseSepolia",
     "fund": "hardhat run scripts/fund-escrow.ts --network baseSepolia",
+    "check-escrow": "hardhat run scripts/check-escrow.ts --network baseSepolia",
     "clean": "hardhat clean",
     "compile": "hardhat compile"
   },
