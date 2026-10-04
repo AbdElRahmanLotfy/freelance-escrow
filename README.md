@@ -62,11 +62,11 @@ A decentralized freelance escrow service that automatically generates yield on d
 
 **## 🎯 Overview**
 
-****Freelance Escrow with Yield**** is a blockchain-based escrow protocol that solves two problems simultaneously:
+\***\*Freelance Escrow with Yield\*\*** is a blockchain-based escrow protocol that solves two problems simultaneously:
 
-1. ****Trust**** — Funds are locked securely until work is complete
+1. \***\*Trust\*\*** — Funds are locked securely until work is complete
 
-2. ****Opportunity Cost**** — Idle funds earn real yield through Aave V3
+2. \***\*Opportunity Cost\*\*** — Idle funds earn real yield through Aave V3
 
 Instead of sitting dormant in a contract, deposited USDC is automatically supplied to Aave V3. The yield earned is split between freelancer and client when the work is released.
 
@@ -74,7 +74,7 @@ Instead of sitting dormant in a contract, deposited USDC is automatically suppli
 
 **## ❌ The Problem**
 
-Traditional freelance escrow has a critical flaw: ****money sits idle****.
+Traditional freelance escrow has a critical flaw: \***\*money sits idle\*\***.
 
 - Client deposits $5,000 for a 1-month project
 
@@ -84,13 +84,13 @@ Traditional freelance escrow has a critical flaw: ****money sits idle****.
 
 - Neither party benefits from the deposited capital
 
-****Opportunity cost:**** At 5% APY, that $5,000 could have earned \~$20.83 in a month.
+\***\*Opportunity cost:\*\*** At 5% APY, that $5,000 could have earned \~$20.83 in a month.
 
 **---**
 
 **## ✅ The Solution**
 
-****Auto-yield escrow using Aave V3:****
+\***\*Auto-yield escrow using Aave V3:\*\***
 
 1. Client deposits USDC
 
@@ -98,7 +98,7 @@ Traditional freelance escrow has a critical flaw: ****money sits idle****.
 
 3. Yield accrues automatically
 
-4. On release: ****70% freelancer bonus, 30% client discount****
+4. On release: \***\*70% freelancer bonus, 30% client discount\*\***
 
 5. Both parties win
 
@@ -164,17 +164,17 @@ Traditional freelance escrow has a critical flaw: ****money sits idle****.
 
 | -------------- | --------------------------------------- |
 
-| ****Created****    | Escrow initialized, awaiting funding    |
+| \***\*Created\*\***    | Escrow initialized, awaiting funding    |
 
-| ****Funded****     | USDC deposited, earning yield in Aave   |
+| \***\*Funded\*\***     | USDC deposited, earning yield in Aave   |
 
-| ****InProgress**** | Work timer started                      |
+| \***\*InProgress\*\*** | Work timer started                      |
 
-| ****Released****   | Payment sent to freelancer (with bonus) |
+| \***\*Released\*\***   | Payment sent to freelancer (with bonus) |
 
-| ****Refunded****   | Client refunded (with compensation)     |
+| \***\*Refunded\*\***   | Client refunded (with compensation)     |
 
-| ****Disputed****   | Under arbitration                       |
+| \***\*Disputed\*\***   | Under arbitration                       |
 
 **---**
 
@@ -184,11 +184,11 @@ Traditional freelance escrow has a critical flaw: ****money sits idle****.
 
 | -------------- | ------------ | -------------------------- |
 
-| ****Freelancer**** | 70%          | Bonus for completing work  |
+| \***\*Freelancer\*\*** | 70%          | Bonus for completing work  |
 
-| ****Client****     | 30%          | Discount on service        |
+| \***\*Client\*\***     | 30%          | Discount on service        |
 
-| ****Arbitrator**** | 10% of yield | Fee for dispute resolution |
+| \***\*Arbitrator\*\*** | 10% of yield | Fee for dispute resolution |
 
 **### Real Example**
 
@@ -202,7 +202,7 @@ Traditional freelance escrow has a critical flaw: ****money sits idle****.
 
 | Large enterprise | $20,000 | 3 months | 5%  | $250.00     | $175.00    | $75.00 |
 
-****Takeaway:**** For small fast projects, yield is a bonus. For large long-term projects, it's a ****legitimate economic advantage**** over Web2 platforms.
+\***\*Takeaway:\*\*** For small fast projects, yield is a bonus. For large long-term projects, it's a \***\*legitimate economic advantage\*\*** over Web2 platforms.
 
 **---**
 
@@ -270,11 +270,11 @@ Traditional freelance escrow has a critical flaw: ****money sits idle****.
 
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 
-| ****EscrowWithYield**** | <a href="https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13" target="_blank" rel="noopener noreferrer">`0x96266591403b08e7ccF01500fbc74547fD6F4E13`</a> |
+| \***\*EscrowWithYield\*\*** | <a href="https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13" target="_blank" rel="noopener noreferrer">`0x96266591403b08e7ccF01500fbc74547fD6F4E13`</a> |
 
-| ****USDC (Circle)****   | <a href="https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e" target="_blank" rel="noopener noreferrer">`0x036CbD53842c5426634e7929541eC2318f3dCF7e`</a> |
+| \***\*USDC (Circle)\*\***   | <a href="https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e" target="_blank" rel="noopener noreferrer">`0x036CbD53842c5426634e7929541eC2318f3dCF7e`</a> |
 
-| ****Aave V3 Pool****    | <a href="https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b" target="_blank" rel="noopener noreferrer">`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`</a> |
+| \***\*Aave V3 Pool\*\***    | <a href="https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b" target="_blank" rel="noopener noreferrer">`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`</a> |
 
 **### Verified On**
 
@@ -394,25 +394,25 @@ freelance-escrow/
 
 **### Required Software**
 
-- ****Node.js**** v22.13.0 or higher
+- \***\*Node.js\*\*** v22.13.0 or higher
 
-- ****npm**** or ****pnpm****
+- \***\*npm\*\*** or \***\*pnpm\*\***
 
-- ****Git****
+- \***\*Git\*\***
 
-- ****MetaMask**** (or any Web3 wallet)
+- \***\*MetaMask\*\*** (or any Web3 wallet)
 
-- ****VS Code**** (recommended)
+- \***\*VS Code\*\*** (recommended)
 
 **### Required Accounts**
 
-- ****Infura**** or ****Alchemy**** (RPC URL)
+- \***\*Infura\*\*** or \***\*Alchemy\*\*** (RPC URL)
 
-- ****Etherscan**** (contract verification)
+- \***\*Etherscan\*\*** (contract verification)
 
-- ****Circle Faucet**** (test USDC)
+- \***\*Circle Faucet\*\*** (test USDC)
 
-- ****Base Sepolia Faucet**** (test ETH)
+- \***\*Base Sepolia Faucet\*\*** (test ETH)
 
 **---**
 
@@ -470,9 +470,9 @@ ESCROW_ADDRESS=0x96266591403b08e7ccF01500fbc74547fD6F4E13
 
 **### 4. Get Test Funds**
 
-- ****SepoliaETH****: <a href="https://www.coinbase.com/faucets/base-sepolia-faucet" target="_blank" rel="noopener noreferrer">Coinbase Faucet</a> or <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer">Alchemy Faucet</a>
+- \***\*SepoliaETH\*\***: <a href="https://www.coinbase.com/faucets/base-sepolia-faucet" target="_blank" rel="noopener noreferrer">Coinbase Faucet</a> or <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer">Alchemy Faucet</a> or <a href="https://portal.cdp.coinbase.com/entity_4b079a88-e819-5645-b80b-cfa9e1a38a5f/onchain-tools/faucet" target="_blank" rel="noopener noreferrer">Coinbase</a>
 
-- ****USDC****: <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Circle Faucet</a>
+- \***\*USDC\*\***: <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Circle Faucet</a>
 
 **### 5. Add Base Sepolia to MetaMask**
 
@@ -497,7 +497,6 @@ ESCROW_ADDRESS=0x96266591403b08e7ccF01500fbc74547fD6F4E13
 **### Hardhat Configuration (`hardhat.config.ts`)**
 
 ```typescript
-
 import { defineConfig, configVariable } from "hardhat/config";
 
 import hardhatToolboxViem from "@nomicfoundation/hardhat-toolbox-viem";
@@ -505,69 +504,52 @@ import hardhatToolboxViem from "@nomicfoundation/hardhat-toolbox-viem";
 import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
 
 export default defineConfig({
+  plugins: [hardhatToolboxViem, hardhatNetworkHelpers],
 
-  plugins: [hardhatToolboxViem, hardhatNetworkHelpers],
+  solidity: {
+    profiles: {
+      default: { version: "0.8.28" },
 
-  solidity: {
+      production: {
+        version: "0.8.28",
 
-    profiles: {
+        settings: { optimizer: { enabled: true, runs: 200 } },
+      },
+    },
+  },
 
-      default: { version: "0.8.28" },
+  networks: {
+    hardhatMainnet: { type: "edr-simulated", chainType: "l1" },
 
-      production: {
+    hardhatOp: { type: "edr-simulated", chainType: "op" },
 
-        version: "0.8.28",
+    baseSepolia: {
+      type: "http",
 
-        settings: { optimizer: { enabled: true, runs: 200 } },
+      chainType: "op",
 
-      },
+      url: configVariable("BASE_SEPOLIA_RPC_URL"),
 
-    },
+      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
 
-  },
+      gasMultiplier: 1.2,
+    },
 
-  networks: {
+    sepolia: {
+      type: "http",
 
-    hardhatMainnet: { type: "edr-simulated", chainType: "l1" },
+      chainType: "l1",
 
-    hardhatOp: { type: "edr-simulated", chainType: "op" },
+      url: configVariable("SEPOLIA_RPC_URL"),
 
-    baseSepolia: {
+      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+    },
+  },
 
-      type: "http",
-
-      chainType: "op",
-
-      url: configVariable("BASE_SEPOLIA_RPC_URL"),
-
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-
-      gasMultiplier: 1.2,
-
-    },
-
-    sepolia: {
-
-      type: "http",
-
-      chainType: "l1",
-
-      url: configVariable("SEPOLIA_RPC_URL"),
-
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-
-    },
-
-  },
-
-  verify: {
-
-    etherscan: { apiKey: configVariable("ETHERSCAN_API_KEY") },
-
-  },
-
+  verify: {
+    etherscan: { apiKey: configVariable("ETHERSCAN_API_KEY") },
+  },
 });
-
 ```
 
 **---**
@@ -634,7 +616,7 @@ npm test
 
 ```
 
-****Expected output:****
+\***\*Expected output:\*\***
 
 ```
 
@@ -660,13 +642,13 @@ Running node:test tests
 
 | ------------------- | ------------------------------------------ |
 
-| ****Create Escrow****   | Client, freelancer, arbitrator assignments |
+| \***\*Create Escrow\*\***   | Client, freelancer, arbitrator assignments |
 
-| ****Fund Escrow****     | USDC transfer + Aave supply                |
+| \***\*Fund Escrow\*\***     | USDC transfer + Aave supply                |
 
-| ****Release Payment**** | Yield split + freelancer payment           |
+| \***\*Release Payment\*\*** | Yield split + freelancer payment           |
 
-| ****Refund Client****   | Yield compensation + state transition      |
+| \***\*Refund Client\*\***   | Yield compensation + state transition      |
 
 **---**
 
@@ -680,7 +662,7 @@ npm run deploy:base
 
 ```
 
-****Output:****
+\***\*Output:\*\***
 
 ```
 
@@ -708,7 +690,7 @@ npx hardhat ignition verify chain-84532 --network baseSepolia
 
 ```
 
-****Verified on:****
+\***\*Verified on:\*\***
 
 - BaseScan
 
@@ -748,7 +730,7 @@ npx hardhat ignition verify chain-84532 --network baseSepolia
 
 **### Real Test on Base Sepolia**
 
-Here's the complete lifecycle with ****actual transaction hashes**** from the test run:
+Here's the complete lifecycle with \***\*actual transaction hashes\*\*** from the test run:
 
 **#### 1. Deploy Contract**
 
@@ -758,7 +740,7 @@ npm run deploy:base
 
 ```
 
-****Contract:**** `0x96266591403b08e7ccF01500fbc74547fD6F4E13`
+\***\*Contract:\*\*** `0x96266591403b08e7ccF01500fbc74547fD6F4E13`
 
 **#### 2. Approve USDC Spending**
 
@@ -768,7 +750,7 @@ npm run approve
 
 ```
 
-****Transaction:**** <a href="https://sepolia.basescan.org/tx/0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787" target="_blank" rel="noopener noreferrer">`0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787`</a>
+\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787" target="_blank" rel="noopener noreferrer">`0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787`</a>
 
 **#### 3. Create Escrow #0**
 
@@ -778,7 +760,7 @@ npm run create-escrow
 
 ```
 
-****Transaction:**** <a href="https://sepolia.basescan.org/tx/0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150" target="_blank" rel="noopener noreferrer">`0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150`</a>
+\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150" target="_blank" rel="noopener noreferrer">`0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150`</a>
 
 | Field      | Value                                        |
 
@@ -800,9 +782,9 @@ npm run fund
 
 ```
 
-****Transaction:**** <a href="https://sepolia.basescan.org/tx/0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26" target="_blank" rel="noopener noreferrer">`0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26`</a>
+\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26" target="_blank" rel="noopener noreferrer">`0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26`</a>
 
-****Result:**** `Yield Active: true` — USDC now earning yield in Aave V3 ✅
+\***\*Result:\*\*** `Yield Active: true` — USDC now earning yield in Aave V3 ✅
 
 **#### 5. Start Work**
 
@@ -812,7 +794,7 @@ npm run start-work
 
 ```
 
-****Transaction:**** <a href="https://sepolia.basescan.org/tx/0x4a036e85d25b908afad2d4bc269847b78bff7dc407f2ddbab0e6ed7a15303895" target="_blank" rel="noopener noreferrer">`0x4a036e85d25b908afad2d4bc269847b78bff7dc407f2ddbab0e6ed7a15303895`</a>
+\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0x4a036e85d25b908afad2d4bc269847b78bff7dc407f2ddbab0e6ed7a15303895" target="_blank" rel="noopener noreferrer">`0x4a036e85d25b908afad2d4bc269847b78bff7dc407f2ddbab0e6ed7a15303895`</a>
 
 **#### 6. Release Payment**
 
@@ -822,7 +804,7 @@ npm run release
 
 ```
 
-****Transaction:**** <a href="https://sepolia.basescan.org/tx/0x5a22da6011f09e11362f414ad03de3cbdce3f993212ba802929f1ef7a94d8716" target="_blank" rel="noopener noreferrer">`0x5a22da6011f09e11362f414ad03de3cbdce3f993212ba802929f1ef7a94d8716`</a>
+\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0x5a22da6011f09e11362f414ad03de3cbdce3f993212ba802929f1ef7a94d8716" target="_blank" rel="noopener noreferrer">`0x5a22da6011f09e11362f414ad03de3cbdce3f993212ba802929f1ef7a94d8716`</a>
 
 **#### 7. Verify Yield Split**
 
@@ -832,7 +814,7 @@ npm run check-balances
 
 ```
 
-****Before vs After:****
+\***\*Before vs After:\*\***
 
 | Account    | Before     | After          | Change          |
 
@@ -842,15 +824,15 @@ npm run check-balances
 
 | Freelancer | 30.00 USDC | 40.000708 USDC | +10.000708 USDC |
 
-****Yield Breakdown:****
+\***\*Yield Breakdown:\*\***
 
-- Total yield: ****0.001012 USDC****
+- Total yield: \***\*0.001012 USDC\*\***
 
-- Freelancer bonus (70%): ****0.000708 USDC****
+- Freelancer bonus (70%): \***\*0.000708 USDC\*\***
 
-- Client discount (30%): ****0.000304 USDC****
+- Client discount (30%): \***\*0.000304 USDC\*\***
 
-****Math verified:**** ✅
+\***\*Math verified:\*\*** ✅
 
 **---**
 
@@ -858,7 +840,7 @@ npm run check-balances
 
 **### Why the Yield is Small in the Demo**
 
-The yield was tiny because the escrow was funded and released in ****\~30 seconds****. The yield formula is:
+The yield was tiny because the escrow was funded and released in \***\*\~30 seconds\*\***. The yield formula is:
 
 ```
 
@@ -874,7 +856,7 @@ With:
 
 - Time = 30 seconds
 
-****Result:**** 0.001012 USDC
+\***\*Result:\*\*** 0.001012 USDC
 
 **### Mainnet Projection (5% APY)**
 
@@ -890,7 +872,7 @@ With:
 
 | $20,000 | 3 months | $175.00          | $75.00          |
 
-****On mainnet, this is a legitimate economic advantage.****
+\***\*On mainnet, this is a legitimate economic advantage.\*\***
 
 **---**
 
@@ -898,21 +880,21 @@ With:
 
 **### Security Features**
 
-- ✅ ****ReentrancyGuard**** — Prevents reentrancy attacks
+- ✅ \***\*ReentrancyGuard\*\*** — Prevents reentrancy attacks
 
-- ✅ ****Ownable**** — Administrative functions protected
+- ✅ \***\*Ownable\*\*** — Administrative functions protected
 
-- ✅ ****Role-based access**** — Client / Freelancer / Arbitrator modifiers
+- ✅ \***\*Role-based access\*\*** — Client / Freelancer / Arbitrator modifiers
 
-- ✅ ****State validation**** — `inState` modifier
+- ✅ \***\*State validation\*\*** — `inState` modifier
 
-- ✅ ****Emergency pause**** — `pause()` / `unpause()`
+- ✅ \***\*Emergency pause\*\*** — `pause()` / `unpause()`
 
-- ✅ ****Safe math**** — Solidity 0.8.x overflow protection
+- ✅ \***\*Safe math\*\*** — Solidity 0.8.x overflow protection
 
-- ✅ ****Event logging**** — All state changes logged
+- ✅ \***\*Event logging\*\*** — All state changes logged
 
-- ✅ ****Aave V3**** — Battle-tested yield protocol
+- ✅ \***\*Aave V3\*\*** — Battle-tested yield protocol
 
 **### Known Limitations**
 
@@ -1012,4 +994,4 @@ MIT License — see <a href="LICENSE" target="_blank" rel="noopener noreferrer">
 
 **---**
 
-****Built with ❤️ on Base Sepolia****
+\***\*Built with ❤️ on Base Sepolia\*\***
