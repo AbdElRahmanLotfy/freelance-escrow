@@ -15,6 +15,7 @@ interface EscrowDetails {
   duration: bigint;
   clientDisputed: boolean;
   freelancerDisputed: boolean;
+  yieldActive: boolean;
 }
 
 describe("EscrowWithYield", async function () {

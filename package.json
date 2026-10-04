@@ -14,6 +14,9 @@
     "create-escrow": "hardhat run scripts/create-escrow.ts --network baseSepolia",
     "fund": "hardhat run scripts/fund-escrow.ts --network baseSepolia",
     "check-escrow": "hardhat run scripts/check-escrow.ts --network baseSepolia",
+    "start-work": "hardhat run scripts/start-work.ts --network baseSepolia",
+    "release": "hardhat run scripts/release-payment.ts --network baseSepolia",
+    "check-balances": "hardhat run scripts/check-balances.ts --network baseSepolia",
     "clean": "hardhat clean",
     "compile": "hardhat compile"
   },
