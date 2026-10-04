@@ -670,7 +670,7 @@ With:
 
 ## 📄 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License — see [https://github.com/AbdElRahmanLotfy/freelance-escrow?tab=MIT-1-ov-file](LICENSE) for details.
 
 ---
 
