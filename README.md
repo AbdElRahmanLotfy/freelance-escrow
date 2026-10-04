@@ -685,11 +685,4 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 📞 Contact
-
-- **GitHub:** [yourusername](https://github.com/yourusername)
-- **Twitter:** [@yourhandle](https://twitter.com/yourhandle)
-
----
-
 **Built with ❤️ on Base Sepolia**
