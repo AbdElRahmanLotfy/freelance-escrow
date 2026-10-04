@@ -17,6 +17,8 @@
     "start-work": "hardhat run scripts/start-work.ts --network baseSepolia",
     "release": "hardhat run scripts/release-payment.ts --network baseSepolia",
     "check-balances": "hardhat run scripts/check-balances.ts --network baseSepolia",
+    "test-aave-deposit": "hardhat run scripts/test-aave-deposit.ts --network baseSepolia",
+    "test-aave": "hardhat run scripts/test-aave.ts --network baseSepolia",
     "clean": "hardhat clean",
     "compile": "hardhat compile"
   },
