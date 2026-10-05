@@ -1,6 +1,91 @@
-**# 🏗️ Freelance Escrow with Yield**
+# 🏗️ Freelance Escrow with Yield
 
-A decentralized freelance escrow service that automatically generates yield on deposited USDC through Aave V3, benefiting both clients and freelancers.
+**A decentralized freelance escrow protocol that turns idle locked funds into productive capital.**
+
+Traditional escrow platforms lock client deposits for weeks or months, earning nothing while work is completed. This protocol solves that by automatically routing USDC deposits into **Aave V3**, where they generate real yield throughout the project duration.
+
+When the work is released, the yield is split between both parties:
+
+- **70% goes to the freelancer** as a completion bonus
+- **30% returns to the client** as a service discount
+
+Built with a production-grade stack: **Solidity 0.8.28**, **Hardhat 3**, **Viem**, and deployed on **Base Sepolia** with real **Aave V3** integration. Fully tested with 4 passing lifecycle tests, triple-verified on BaseScan, Blockscout, and Sourcify.
+
+---
+
+## Why It Matters
+
+| Platform          | Funds Earn Yield?    | Freelancer Bonus? | Client Discount?    |
+| ----------------- | -------------------- | ----------------- | ------------------- |
+| Upwork Escrow     | ❌ No                | ❌ No             | ❌ No               |
+| Fiverr            | ❌ No                | ❌ No             | ❌ No               |
+| Traditional Banks | ⚠️ Only to the bank  | ❌ No             | ❌ No               |
+| **This Protocol** | ✅ **Yes (Aave V3)** | ✅ **70% bonus**  | ✅ **30% discount** |
+
+---
+
+## Key Features
+
+- 🔒 **Secure Escrow** — Funds locked until work is verified
+- 💰 **Automatic Yield** — USDC deposited into Aave V3
+- 🤝 **Fair Split** — 70% freelancer / 30% client
+- ⚖️ **Dispute Resolution** — Arbitrator-mediated
+- ⏸️ **Emergency Pause** — Owner-controlled circuit breaker
+- ✅ **Triple-Verified** — BaseScan + Blockscout + Sourcify
+- 🧪 **Fully Tested** — 4 passing lifecycle tests
+
+---
+
+## Tech Stack
+
+| Layer           | Technology                  |
+| --------------- | --------------------------- |
+| Smart Contracts | Solidity 0.8.28             |
+| Framework       | Hardhat 3.15+               |
+| Interaction     | Viem 2.55+                  |
+| Yield Protocol  | Aave V3                     |
+| Network         | Base Sepolia (L2)           |
+| Testing         | node:test + viem assertions |
+| Deployment      | Hardhat Ignition            |
+| Verification    | Etherscan V2 API            |
+
+---
+
+## Live Deployment
+
+**Escrow Contract:** [`0x96266591403b08e7ccF01500fbc74547fD6F4E13`](https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13)
+
+**Verified on:**
+
+- ✅ [BaseScan](https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13#code)
+- ✅ [Blockscout](https://base-sepolia.blockscout.com/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13#code)
+- ✅ [Sourcify](https://sourcify.dev/server/repo-ui/84532/0x96266591403b08e7ccF01500fbc74547fD6F4E13)
+
+**Full lifecycle tested end-to-end with real yield generation.**
+
+---
+
+## Status
+
+| Component               | Status         |
+| ----------------------- | -------------- |
+| Smart Contract          | ✅ Complete    |
+| Tests                   | ✅ 4 passing   |
+| Base Sepolia Deployment | ✅ Live        |
+| Aave V3 Integration     | ✅ Working     |
+| Yield Split             | ✅ Verified    |
+| Frontend                | 🚧 In Progress |
+
+---
+
+## Roadmap
+
+- [x] **Phase 1** — Smart contract + tests + deployment
+- [ ] **Phase 2** — Next.js frontend with Reown AppKit
+- [ ] **Phase 3** — Base Mainnet deployment with real USDC
+- [ ] **Phase 4** — Kleros arbitration + time-lock auto-release
+
+---
 
 <a href="https://soliditylang.org/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Solidity-0.8.28-blue" alt="Solidity"></a>
 
