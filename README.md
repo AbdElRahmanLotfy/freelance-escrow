@@ -1,19 +1,63 @@
 # 🏗️ Freelance Escrow with Yield
 
-**A decentralized freelance escrow protocol that turns idle locked funds into productive capital.**
+**A decentralized escrow protocol that turns idle locked funds into productive capital using Aave V3.**
 
-Traditional escrow platforms lock client deposits for weeks or months, earning nothing while work is completed. This protocol solves that by automatically routing USDC deposits into **Aave V3**, where they generate real yield throughout the project duration.
+Traditional freelance escrow locks client deposits for weeks or months earning nothing. This protocol solves that by automatically supplying USDC to Aave V3, where it generates real yield throughout the project duration. When work is released, the yield is split 70/30 between freelancer and client.
 
-When the work is released, the yield is split between both parties:
-
-- **70% goes to the freelancer** as a completion bonus
-- **30% returns to the client** as a service discount
-
-Built with a production-grade stack: **Solidity 0.8.28**, **Hardhat 3**, **Viem**, and deployed on **Base Sepolia** with real **Aave V3** integration. Fully tested with 4 passing lifecycle tests, triple-verified on BaseScan, Blockscout, and Sourcify.
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.28-blue)](https://soliditylang.org/)
+[![Hardhat](https://img.shields.io/badge/Hardhat-3.18-yellow)](https://hardhat.org/)
+[![Base Sepolia](https://img.shields.io/badge/Network-Base%20Sepolia-blue)](https://sepolia.basescan.org/)
+[![Aave V3](https://img.shields.io/badge/Aave-V3-purple)](https://aave.com/)
+[![Tests](https://img.shields.io/badge/Tests-21%20passing-green)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## Why It Matters
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Why It Matters](#-why-it-matters)
+- [How It Works](#-how-it-works)
+- [Live Deployment](#-live-deployment)
+- [Architecture](#-architecture)
+- [The Yield Mechanism](#-the-yield-mechanism)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [Full Lifecycle Walkthrough](#-full-lifecycle-walkthrough)
+- [Testing](#-testing)
+- [Security](#-security)
+- [Roadmap](#-roadmap)
+- [Connect](#-connect)
+- [License](#-license)
+
+---
+
+## 🎯 Overview
+
+**Freelance Escrow with Yield** is a blockchain-based escrow protocol that solves two problems simultaneously:
+
+1. **Trust** — Funds are locked securely until work is complete
+2. **Opportunity Cost** — Idle funds earn real yield through Aave V3
+
+Instead of sitting dormant, deposited USDC is automatically supplied to Aave V3. The yield earned is split between freelancer and client when the work is released.
+
+### Core Features
+
+- 🔒 **Secure Escrow** — Funds locked until work is verified
+- 💰 **Automatic Yield** — USDC deposited into Aave V3
+- 🤝 **Fair Yield Split** — 70% freelancer bonus, 30% client discount
+- ⚖️ **Dispute Resolution** — Arbitrator-mediated with yield-funded fees
+- 🔄 **Multi-Escrow Support** — Multiple escrows share one Aave position
+- ⏸️ **Emergency Pause** — Owner-controlled circuit breaker
+- ✅ **Triple Verified** — BaseScan + Blockscout + Sourcify
+- 🧪 **21 Passing Tests** — Comprehensive lifecycle coverage
+
+---
+
+## ❌ Why It Matters
+
+Traditional freelance platforms lock client deposits without generating any value:
 
 | Platform          | Funds Earn Yield?    | Freelancer Bonus? | Client Discount?    |
 | ----------------- | -------------------- | ----------------- | ------------------- |
@@ -22,1061 +66,690 @@ Built with a production-grade stack: **Solidity 0.8.28**, **Hardhat 3**, **Viem*
 | Traditional Banks | ⚠️ Only to the bank  | ❌ No             | ❌ No               |
 | **This Protocol** | ✅ **Yes (Aave V3)** | ✅ **70% bonus**  | ✅ **30% discount** |
 
----
+### Real Numbers
 
-## Key Features
+| Escrow Amount | Duration | APY | Yield Earned | Freelancer (+70%) | Client (+30%) |
+| ------------- | -------- | --- | ------------ | ----------------- | ------------- |
+| $1,000        | 2 weeks  | 5%  | $1.92        | $1.34             | $0.58         |
+| $5,000        | 1 month  | 5%  | $20.83       | $14.58            | $6.25         |
+| $20,000       | 3 months | 5%  | $250.00      | $175.00           | $75.00        |
 
-- 🔒 **Secure Escrow** — Funds locked until work is verified
-- 💰 **Automatic Yield** — USDC deposited into Aave V3
-- 🤝 **Fair Split** — 70% freelancer / 30% client
-- ⚖️ **Dispute Resolution** — Arbitrator-mediated
-- ⏸️ **Emergency Pause** — Owner-controlled circuit breaker
-- ✅ **Triple-Verified** — BaseScan + Blockscout + Sourcify
-- 🧪 **Fully Tested** — 4 passing lifecycle tests
+**For small fast projects**, the yield is a bonus. **For large long-term projects**, it's a legitimate economic advantage.
 
 ---
 
-## Tech Stack
-
-| Layer           | Technology                  |
-| --------------- | --------------------------- |
-| Smart Contracts | Solidity 0.8.28             |
-| Framework       | Hardhat 3.15+               |
-| Interaction     | Viem 2.55+                  |
-| Yield Protocol  | Aave V3                     |
-| Network         | Base Sepolia (L2)           |
-| Testing         | node:test + viem assertions |
-| Deployment      | Hardhat Ignition            |
-| Verification    | Etherscan V2 API            |
-
----
-
-## Live Deployment
-
-**Escrow Contract:** [`0x96266591403b08e7ccF01500fbc74547fD6F4E13`](https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13)
-
-**Verified on:**
-
-- ✅ [BaseScan](https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13#code)
-- ✅ [Blockscout](https://base-sepolia.blockscout.com/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13#code)
-- ✅ [Sourcify](https://sourcify.dev/server/repo-ui/84532/0x96266591403b08e7ccF01500fbc74547fD6F4E13)
-
-**Full lifecycle tested end-to-end with real yield generation.**
-
----
-
-## Status
-
-| Component               | Status         |
-| ----------------------- | -------------- |
-| Smart Contract          | ✅ Complete    |
-| Tests                   | ✅ 4 passing   |
-| Base Sepolia Deployment | ✅ Live        |
-| Aave V3 Integration     | ✅ Working     |
-| Yield Split             | ✅ Verified    |
-| Frontend                | 🚧 In Progress |
-
----
-
-## Roadmap
-
-- [x] **Phase 1** — Smart contract + tests + deployment
-- [ ] **Phase 2** — Next.js frontend with Reown AppKit
-- [ ] **Phase 3** — Base Mainnet deployment with real USDC
-- [ ] **Phase 4** — Kleros arbitration + time-lock auto-release
-
----
-
-<a href="https://soliditylang.org/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Solidity-0.8.28-blue" alt="Solidity"></a>
-
-<a href="https://hardhat.org/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Hardhat-3.x-yellow" alt="Hardhat"></a>
-
-<a href="https://sepolia.basescan.org/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Network-Base%20Sepolia-blue" alt="Base Sepolia"></a>
-
-<a href="https://aave.com/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Aave-V3-purple" alt="Aave V3"></a>
-
-<img src="https://img.shields.io/badge/Tests-4%20passing-green" alt="Tests">
-
-**---**
-
-**## 📋 Table of Contents**
-
-- <a href="#-overview" target="_blank" rel="noopener noreferrer">Overview</a>
-
-- <a href="#-the-problem" target="_blank" rel="noopener noreferrer">The Problem</a>
-
-- <a href="#-the-solution" target="_blank" rel="noopener noreferrer">The Solution</a>
-
-- <a href="#-how-it-works" target="_blank" rel="noopener noreferrer">How It Works</a>
-
-- <a href="#-yield-distribution" target="_blank" rel="noopener noreferrer">Yield Distribution</a>
-
-- <a href="#-architecture" target="_blank" rel="noopener noreferrer">Architecture</a>
-
-- <a href="#-deployed-contracts" target="_blank" rel="noopener noreferrer">Deployed Contracts</a>
-
-- <a href="#-technology-stack" target="_blank" rel="noopener noreferrer">Technology Stack</a>
-
-- <a href="#-project-structure" target="_blank" rel="noopener noreferrer">Project Structure</a>
-
-- <a href="#-prerequisites" target="_blank" rel="noopener noreferrer">Prerequisites</a>
-
-- <a href="#-installation" target="_blank" rel="noopener noreferrer">Installation</a>
-
-- <a href="#-configuration" target="_blank" rel="noopener noreferrer">Configuration</a>
-
-- <a href="#-smart-contract" target="_blank" rel="noopener noreferrer">Smart Contract</a>
-
-- <a href="#-testing" target="_blank" rel="noopener noreferrer">Testing</a>
-
-- <a href="#-deployment" target="_blank" rel="noopener noreferrer">Deployment</a>
-
-- <a href="#-scripts" target="_blank" rel="noopener noreferrer">Scripts</a>
-
-- <a href="#-full-lifecycle-walkthrough" target="_blank" rel="noopener noreferrer">Full Lifecycle Walkthrough</a>
-
-- <a href="#-real-yield-example" target="_blank" rel="noopener noreferrer">Real Yield Example</a>
-
-- <a href="#-security" target="_blank" rel="noopener noreferrer">Security</a>
-
-- <a href="#-roadmap" target="_blank" rel="noopener noreferrer">Roadmap</a>
-
-- <a href="#-license" target="_blank" rel="noopener noreferrer">License</a>
-
-**---**
-
-**## 🎯 Overview**
-
-\***\*Freelance Escrow with Yield\*\*** is a blockchain-based escrow protocol that solves two problems simultaneously:
-
-1. \***\*Trust\*\*** — Funds are locked securely until work is complete
-
-2. \***\*Opportunity Cost\*\*** — Idle funds earn real yield through Aave V3
-
-Instead of sitting dormant in a contract, deposited USDC is automatically supplied to Aave V3. The yield earned is split between freelancer and client when the work is released.
-
-**---**
-
-**## ❌ The Problem**
-
-Traditional freelance escrow has a critical flaw: \***\*money sits idle\*\***.
-
-- Client deposits $5,000 for a 1-month project
-
-- Funds are locked in escrow, earning nothing
-
-- Freelancer waits for payment
-
-- Neither party benefits from the deposited capital
-
-\***\*Opportunity cost:\*\*** At 5% APY, that $5,000 could have earned \~$20.83 in a month.
-
-**---**
-
-**## ✅ The Solution**
-
-\***\*Auto-yield escrow using Aave V3:\*\***
-
-1. Client deposits USDC
-
-2. Contract supplies USDC to Aave V3
-
-3. Yield accrues automatically
-
-4. On release: \***\*70% freelancer bonus, 30% client discount\*\***
-
-5. Both parties win
-
-**---**
-
-**## 🔄 How It Works**
+## 🔄 How It Works
 
 ```
-
 ┌─────────────┐
-
-│   Client    │
-
+│   Client    │
 └──────┬──────┘
-
-       │ 1. createEscrow()
-
-       │ 2. fundEscrow(amount)
-
-       ▼
-
+       │ 1. createEscrow(freelancer, arbitrator, duration)
+       │ 2. fundEscrow(escrowId, amount)
+       ▼
 ┌─────────────────────────┐
-
-│   EscrowWithYield       │
-
-│   (Smart Contract)      │
-
+│   EscrowWithYield       │
+│   (Smart Contract)      │
 └──────────┬──────────────┘
-
-           │ 3. supply(amount)
-
-           ▼
-
+           │ 3. supply(USDC, amount)
+           ▼
 ┌─────────────────────────┐
-
-│   Aave V3 Pool          │
-
-│   (Yield Generation)    │
-
+│   Aave V3 Pool          │
+│   (Yield Generation)    │
 └──────────┬──────────────┘
-
-           │ 4. yield accrues over time
-
-           │ 5. withdraw(principal + yield)
-
-           ▼
-
+           │ 4. aTokens minted to escrow
+           │ 5. yield accrues over time
+           ▼
 ┌─────────────────────────┐
-
-│   Yield Split           │
-
-│   70% → Freelancer      │
-
-│   30% → Client          │
-
+│   Work Period           │
+│   (Duration)            │
+└──────────┬──────────────┘
+           │ 6. releasePayment() / refundClient()
+           ▼
+┌─────────────────────────┐
+│   Yield Split           │
+│   70% → Freelancer      │
+│   30% → Client          │
 └─────────────────────────┘
-
 ```
 
-**### Escrow States**
+### Escrow States
 
-| State          | Description                             |
-
+| State          | Description                             |
 | -------------- | --------------------------------------- |
+| **Created**    | Escrow initialized, awaiting funding    |
+| **Funded**     | USDC deposited, earning yield in Aave   |
+| **InProgress** | Work timer started                      |
+| **Released**   | Payment sent to freelancer (with bonus) |
+| **Refunded**   | Client refunded (with compensation)     |
+| **Disputed**   | Under arbitration                       |
 
-| \***\*Created\*\***    | Escrow initialized, awaiting funding    |
+---
 
-| \***\*Funded\*\***     | USDC deposited, earning yield in Aave   |
+## 📍 Live Deployment
 
-| \***\*InProgress\*\*** | Work timer started                      |
+### Base Sepolia Testnet (Chain ID: 84532)
 
-| \***\*Released\*\***   | Payment sent to freelancer (with bonus) |
+| Contract                | Address                                                                                                                         | Explorer |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| **EscrowWithYield**     | [`0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6) | BaseScan |
+| **USDC (Circle)**       | [`0x036CbD53842c5426634e7929541eC2318f3dCF7e`](https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e) | BaseScan |
+| **Aave V3 Pool**        | [`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`](https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b) | BaseScan |
+| **aUSDC (aBasSepUSDC)** | [`0xf53B60F4006cab2b3C4688ce41fD5362427A2A66`](https://sepolia.basescan.org/address/0xf53B60F4006cab2b3C4688ce41fD5362427A2A66) | BaseScan |
 
-| \***\*Refunded\*\***   | Client refunded (with compensation)     |
+### Verified On
 
-| \***\*Disputed\*\***   | Under arbitration                       |
+- ✅ [BaseScan](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6#code)
+- ✅ [Blockscout](https://base-sepolia.blockscout.com/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6#code)
+- ✅ [Sourcify](https://sourcify.dev/server/repo-ui/84532/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6)
 
-**---**
-
-**## 💰 Yield Distribution**
-
-| Party          | Share        | Rationale                  |
-
-| -------------- | ------------ | -------------------------- |
-
-| \***\*Freelancer\*\*** | 70%          | Bonus for completing work  |
-
-| \***\*Client\*\***     | 30%          | Discount on service        |
-
-| \***\*Arbitrator\*\*** | 10% of yield | Fee for dispute resolution |
-
-**### Real Example**
-
-| Scenario         | Amount  | Duration | APY | Total Yield | Freelancer | Client |
-
-| ---------------- | ------- | -------- | --- | ----------- | ---------- | ------ |
-
-| Small project    | $1,000  | 2 weeks  | 5%  | $1.92       | $1.34      | $0.58  |
-
-| Medium project   | $5,000  | 1 month  | 5%  | $20.83      | $14.58     | $6.25  |
-
-| Large enterprise | $20,000 | 3 months | 5%  | $250.00     | $175.00    | $75.00 |
-
-\***\*Takeaway:\*\*** For small fast projects, yield is a bonus. For large long-term projects, it's a \***\*legitimate economic advantage\*\*** over Web2 platforms.
-
-**---**
-
-**## 🏗️ Architecture**
+### Live On-Chain State
 
 ```
+Total escrows: 1
 
-┌──────────────────────────────────────────────────┐
-
-│                  Frontend (TBD)                  │
-
-│        Next.js 14 + Reown AppKit + ethers        │
-
-└────────────────────┬─────────────────────────────┘
-
-                     │
-
-                     ▼
-
-┌──────────────────────────────────────────────────┐
-
-│              EscrowWithYield.sol                 │
-
-│  ┌────────────────────────────────────────────┐  │
-
-│  │ • createEscrow()                           │  │
-
-│  │ • fundEscrow() → Aave.supply()             │  │
-
-│  │ • startWork()                              │  │
-
-│  │ • releasePayment() → Aave.withdraw()       │  │
-
-│  │ • refundClient()                           │  │
-
-│  │ • raiseDispute() / resolveDispute()        │  │
-
-│  │ • pause() / unpause()                      │  │
-
-│  └────────────────────────────────────────────┘  │
-
-└────────────────────┬─────────────────────────────┘
-
-                     │
-
-                     ▼
-
-┌──────────────────────────────────────────────────┐
-
-│            Aave V3 Pool (Base Sepolia)           │
-
-│        Real yield generation on USDC             │
-
-└──────────────────────────────────────────────────┘
-
+Escrow #0:
+  Client:        0x98B7a3b289a20E5Fb382e309E830DB6DFa7D530E
+  Freelancer:    0x1B9c6612F602AF4221295c0C085a676B74597746
+  Arbitrator:    0x98B7a3b289a20E5Fb382e309E830DB6DFa7D530E
+  Amount:        10 USDC
+  State:         1 (Funded)
+  Yield Active:  true ✅
+  Yield Earned:  0 USDC (accruing)
 ```
 
-**---**
+---
 
-**## 📍 Deployed Contracts**
-
-**### Base Sepolia Testnet (Chain ID: 84532)**
-
-| Contract            | Address                                                                                                                         |
-
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-
-| \***\*EscrowWithYield\*\*** | <a href="https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13" target="_blank" rel="noopener noreferrer">`0x96266591403b08e7ccF01500fbc74547fD6F4E13`</a> |
-
-| \***\*USDC (Circle)\*\***   | <a href="https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e" target="_blank" rel="noopener noreferrer">`0x036CbD53842c5426634e7929541eC2318f3dCF7e`</a> |
-
-| \***\*Aave V3 Pool\*\***    | <a href="https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b" target="_blank" rel="noopener noreferrer">`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`</a> |
-
-**### Verified On**
-
-- ✅ <a href="https://sepolia.basescan.org/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13#code" target="_blank" rel="noopener noreferrer">BaseScan</a>
-
-- ✅ <a href="https://base-sepolia.blockscout.com/address/0x96266591403b08e7ccF01500fbc74547fD6F4E13#code" target="_blank" rel="noopener noreferrer">Blockscout</a>
-
-- ✅ <a href="https://sourcify.dev/server/repo-ui/84532/0x96266591403b08e7ccF01500fbc74547fD6F4E13" target="_blank" rel="noopener noreferrer">Sourcify</a>
-
-**---**
-
-**## 🛠️ Technology Stack**
-
-**### Smart Contracts**
-
-| Technology   | Version | Purpose                 |
-
-| ------------ | ------- | ----------------------- |
-
-| Solidity     | 0.8.28  | Contract language       |
-
-| Hardhat      | 3.15+   | Development environment |
-
-| Viem         | 2.55+   | Ethereum interaction    |
-
-| OpenZeppelin | 5.6+    | Security standards      |
-
-| Aave V3      | -       | Yield protocol          |
-
-**### Testing**
-
-| Technology      | Version  | Purpose             |
-
-| --------------- | -------- | ------------------- |
-
-| node:test       | Built-in | Test runner         |
-
-| Viem Assertions | -        | Contract assertions |
-
-**### Deployment**
-
-| Technology                    | Purpose                  |
-
-| ----------------------------- | ------------------------ |
-
-| Hardhat Ignition              | Deployment orchestration |
-
-| Etherscan/Blockscout/Sourcify | Contract verification    |
-
-**---**
-
-**## 📁 Project Structure**
+## 🏗️ Architecture
 
 ```
+┌──────────────────────────────────────────────────────┐
+│                  Frontend (Next.js)                  │
+│         Reown AppKit + ethers v6 + Tailwind          │
+└────────────────────┬─────────────────────────────────┘
+                     │
+                     ▼
+┌──────────────────────────────────────────────────────┐
+│              EscrowWithYield.sol                     │
+│  ┌────────────────────────────────────────────────┐  │
+│  │ • createEscrow()                               │  │
+│  │ • fundEscrow()     → Aave.supply()             │  │
+│  │ • startWork()                                  │  │
+│  │ • releasePayment() → Aave.withdraw()           │  │
+│  │ • refundClient()                               │  │
+│  │ • raiseDispute() / resolveDispute()            │  │
+│  │ • pause() / unpause()                          │  │
+│  └────────────────────────────────────────────────┘  │
+└────────────────────┬─────────────────────────────────┘
+                     │
+                     ▼
+┌──────────────────────────────────────────────────────┐
+│            Aave V3 Pool (Base Sepolia)               │
+│        Real yield generation on USDC                 │
+└──────────────────────────────────────────────────────┘
+```
 
+### Key Design Decisions
+
+**1. Scaled aToken Share Accounting**
+
+Multiple escrows share **one** Aave position. Each escrow tracks its `scaledATokenShares` — Aave's internal representation of ownership that stays constant while the underlying value grows.
+
+```solidity
+// When funding:
+uint256 scaledBefore = aToken.scaledBalanceOf(address(this));
+// ... supply to Aave ...
+uint256 scaledAfter = aToken.scaledBalanceOf(address(this));
+escrow.scaledATokenShares = scaledAfter - scaledBefore;
+totalScaledATokenShares += escrow.scaledATokenShares;
+
+// When releasing:
+uint256 escrowValue = (aToken.balanceOf(address(this)) * escrow.scaledATokenShares)
+                    / totalScaledATokenShares;
+```
+
+**2. Yield-Funded Arbitration**
+
+During disputes, funds **keep earning yield** in Aave. The arbitrator's fee comes from the yield, never from the principal.
+
+**3. Duration Enforcement**
+
+`releasePayment()` requires the work period to have elapsed:
+
+```solidity
+require(block.timestamp >= escrow.startTime + escrow.duration, "Work period not finished");
+```
+
+**4. Multi-Token Safety**
+
+Uses OpenZeppelin's `SafeERC20` with `forceApprove()` for compatibility with non-standard tokens.
+
+**5. Emergency Pause**
+
+Owner can `pause()` / `unpause()` to halt new escrows during an exploit or upstream failure.
+
+---
+
+## 💰 The Yield Mechanism
+
+### How Aave aTokens Work
+
+Aave aTokens have **two balances**:
+
+- **`balanceOf(user)`** — current value (grows with yield)
+- **`scaledBalanceOf(user)`** — share count (stays constant)
+
+Example with 10% APY:
+| Time | scaledBalanceOf | balanceOf |
+|------|-----------------|-----------|
+| Day 0 | 100 | 100 |
+| Day 365 | 100 | 110 |
+
+The **scaled balance** is your ownership share. The **actual balance** includes accrued yield.
+
+### Our Accounting
+
+Every escrow stores its `scaledATokenShares`. When releasing:
+
+```
+escrowValue = (totalATokenBalance × escrow.scaledATokenShares) / totalScaledATokenShares
+```
+
+This gives each escrow **exactly its proportional share** of the pool's yield — even when 100+ escrows share the same position.
+
+### Yield Distribution
+
+| Recipient      | Share                           | Rationale                  |
+| -------------- | ------------------------------- | -------------------------- |
+| **Freelancer** | 70%                             | Bonus for completing work  |
+| **Client**     | 30%                             | Discount on service        |
+| **Arbitrator** | 10% of yield (only on disputes) | Fee for dispute resolution |
+
+### Rounding Edge Cases
+
+Solidity truncates integer division. Our 21 tests verify:
+
+- **1 wei yield:** `(1 * 70) / 100 = 0` → freelancer gets 0, client gets 1
+- **10 wei yield:** `(10 * 70) / 100 = 7` → freelancer gets 7, client gets 3
+- **No funds stuck:** Total distributed always equals total received
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer               | Technology        | Purpose                 |
+| ------------------- | ----------------- | ----------------------- |
+| **Smart Contracts** | Solidity 0.8.28   | Contract language       |
+| **Framework**       | Hardhat 3.18      | Development environment |
+| **Interactions**    | Viem 2.57         | Ethereum client         |
+| **Security**        | OpenZeppelin 5.6  | Standards               |
+| **Yield Protocol**  | Aave V3           | Real yield              |
+| **Network**         | Base Sepolia (L2) | Deployment              |
+| **Testing**         | node:test         | Built-in runner         |
+| **Frontend**        | Next.js 16        | React framework         |
+| **Wallet**          | Reown AppKit      | Connection              |
+| **Frontend Web3**   | ethers v6         | Contract calls          |
+| **Styling**         | Tailwind CSS 4    | UI                      |
+
+---
+
+## 📁 Project Structure
+
+```
 freelance-escrow/
-
 ├── contracts/
-
-│   ├── EscrowWithYield.sol          # Main escrow contract
-
-│   └── mocks/
-
-│       ├── MockERC20.sol            # Test USDC
-
-│       └── MockYieldStrategy.sol    # Aave V3 mock for testing
-
-├── ignition/
-
-│   └── modules/
-
-│       ├── Escrow.ts                # Sepolia deployment
-
-│       └── EscrowBase.ts            # Base Sepolia deployment
-
+│   ├── EscrowWithYield.sol          # Main contract
+│   └── mocks/
+│       ├── MockAavePool.sol         # Aave V3 mock
+│       ├── MockAToken.sol           # aUSDC mock
+│       └── MockERC20.sol            # USDC mock
 ├── test/
-
-│   └── Escrow.test.ts               # 4 passing tests
-
+│   └── Escrow.test.ts               # 21 passing tests
+├── ignition/
+│   └── modules/
+│       └── EscrowBase.ts            # Base Sepolia deployment
 ├── scripts/
-
-│   ├── approve-usdc.ts              # Approve USDC spending
-
-│   ├── check-balance.ts             # Check USDC balance
-
-│   ├── check-balances.ts            # Check both parties' balances
-
-│   ├── check-escrow.ts              # View escrow state
-
-│   ├── create-escrow.ts             # Create new escrow
-
-│   ├── fund-escrow.ts               # Fund escrow
-
-│   ├── start-work.ts                # Start work timer
-
-│   ├── release-payment.ts           # Release with yield split
-
-│   └── test-aave.ts                 # Direct Aave test
-
-├── hardhat.config.ts                # Hardhat 3 configuration
-
-├── tsconfig.json                    # TypeScript configuration
-
-├── .env                             # Environment variables
-
-├── .env.example                     # Environment template
-
-├── package.json                     # Dependencies
-
-└── README.md                        # This file
-
+│   ├── approve-usdc.ts
+│   ├── check-balance.ts
+│   ├── check-escrow.ts
+│   ├── check-escrow-config.ts
+│   ├── create-escrow.ts
+│   ├── fund-escrow.ts
+│   ├── get-ausdc.ts
+│   ├── release-payment.ts
+│   ├── start-work.ts
+│   ├── test-aave.ts
+│   └── test-ai-atoken.ts
+├── frontend/
+│   ├── app/
+│   │   ├── page.tsx                 # Dashboard
+│   │   ├── layout.tsx
+│   │   └── providers.tsx            # AppKit
+│   ├── components/
+│   │   ├── ConnectButton.tsx
+│   │   ├── EscrowStats.tsx
+│   │   ├── CreateEscrowForm.tsx
+│   │   ├── EscrowList.tsx
+│   │   └── EscrowCard.tsx
+│   ├── lib/
+│   │   ├── constants.ts
+│   │   ├── contract.ts
+│   │   └── format.ts
+│   └── abi/
+│       └── EscrowWithYield.json
+├── hardhat.config.ts
+├── tsconfig.json
+├── package.json
+├── .env.example
+└── README.md
 ```
 
-**---**
+---
 
-**## 📋 Prerequisites**
+## 🚀 Getting Started
 
-**### Required Software**
+### Prerequisites
 
-- \***\*Node.js\*\*** v22.13.0 or higher
+- **Node.js** v22.13.0+
+- **pnpm** (recommended) or npm
+- **MetaMask** or any Web3 wallet
+- **Testnet tokens**: Base Sepolia ETH + USDC
 
-- \***\*npm\*\*** or \***\*pnpm\*\***
-
-- \***\*Git\*\***
-
-- \***\*MetaMask\*\*** (or any Web3 wallet)
-
-- \***\*VS Code\*\*** (recommended)
-
-**### Required Accounts**
-
-- \***\*Infura\*\*** or \***\*Alchemy\*\*** (RPC URL)
-
-- \***\*Etherscan\*\*** (contract verification)
-
-- \***\*Circle Faucet\*\*** (test USDC)
-
-- \***\*Base Sepolia Faucet\*\*** (test ETH)
-
-**---**
-
-**## 🚀 Installation**
-
-**### 1. Clone the Repository**
+### 1. Clone the Repository
 
 ```bash
-
-git clone https://github.com/yourusername/freelance-escrow.git
-
+git clone https://github.com/AbdElRahmanLotfy/freelance-escrow.git
 cd freelance-escrow
-
 ```
 
-**### 2. Install Dependencies**
+### 2. Install Dependencies
 
 ```bash
+# Backend
+pnpm install
 
-npm install
-
+# Frontend
+cd frontend
+pnpm install
+cd ..
 ```
 
-**### 3. Set Up Environment Variables**
+### 3. Configure Environment
+
+Create `.env`:
 
 ```bash
-
 cp .env.example .env
-
 ```
 
 Edit `.env`:
 
 ```env
-
 # RPC URLs
-
 SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
-
 BASE_SEPOLIA_RPC_URL=https://base-sepolia.infura.io/v3/YOUR_KEY
 
 # Wallet
-
-SEPOLIA_PRIVATE_KEY=0xyour_private_key_here
+SEPOLIA_PRIVATE_KEY=0xyour_private_key
 
 # Etherscan
+ETHERSCAN_API_KEY=your_etherscan_key
 
-ETHERSCAN_API_KEY=your_etherscan_api_key
-
-# Deployed contract (fill after deployment)
-
-ESCROW_ADDRESS=0x96266591403b08e7ccF01500fbc74547fD6F4E13
-
+# Deployed contract
+ESCROW_ADDRESS=0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6
 ```
 
-**### 4. Get Test Funds**
+Create `frontend/.env.local`:
 
-- \***\*SepoliaETH\*\***: <a href="https://www.coinbase.com/faucets/base-sepolia-faucet" target="_blank" rel="noopener noreferrer">Coinbase Faucet</a> or <a href="https://www.alchemy.com/faucets/base-sepolia" target="_blank" rel="noopener noreferrer">Alchemy Faucet</a> or <a href="https://portal.cdp.coinbase.com/entity_4b079a88-e819-5645-b80b-cfa9e1a38a5f/onchain-tools/faucet" target="_blank" rel="noopener noreferrer">Coinbase</a>
+```env
+# WalletConnect Project ID (get from https://cloud.walletconnect.com/)
+NEXT_PUBLIC_PROJECT_ID=your_walletconnect_project_id
 
-- \***\*USDC\*\***: <a href="https://faucet.circle.com/" target="_blank" rel="noopener noreferrer">Circle Faucet</a>
+# Deployed escrow contract
+NEXT_PUBLIC_ESCROW_ADDRESS=0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6
 
-**### 5. Add Base Sepolia to MetaMask**
+# USDC on Base Sepolia (Circle)
+NEXT_PUBLIC_USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 
-| Setting      | Value                          |
+# Chain ID (84532 = Base Sepolia)
+NEXT_PUBLIC_CHAIN_ID=84532
+```
 
+### 4. Get Test Tokens
+
+You'll need two things on Base Sepolia:
+
+- **SepoliaETH** for gas
+- **USDC** for escrow funding
+
+#### SepoliaETH (Gas)
+
+Base Sepolia faucets typically require either a **mainnet ETH balance** or **proof of work**:
+
+| Faucet                      | Requirement                          | Link                                                                             |
+| --------------------------- | ------------------------------------ | -------------------------------------------------------------------------------- |
+| Coinbase Developer Platform | CDP account + mainnet ETH balance ⚠️ | [portal.cdp.coinbase.com](https://portal.cdp.coinbase.com/products/faucet)       |
+| Sepolia PoW Faucet          | Browser mining (no mainnet ETH)      | [sepolia-faucet.pk910.de](https://sepolia-faucet.pk910.de/)                      |
+| Alchemy                     | Alchemy account + mainnet ETH        | [alchemy.com/faucets/base-sepolia](https://www.alchemy.com/faucets/base-sepolia) |
+
+> ⚠️ **Common blocker:** Most Base Sepolia faucets require a **mainnet ETH balance** (typically ≥ 0.001 ETH) to prevent bot abuse. If you don't have mainnet ETH, use the **PoW Faucet** (browser mining) or bridge from Ethereum Sepolia.
+
+#### USDC (Escrow Funding)
+
+| Faucet                | Requirement    | Link                                            |
+| --------------------- | -------------- | ----------------------------------------------- |
+| Circle Testnet Faucet | Circle account | [faucet.circle.com](https://faucet.circle.com/) |
+
+> ⚠️ **Limit:** One request per asset/network every **2 hours**. Verify the USDC address matches `0x036CbD53842c5426634e7929541eC2318f3dCF7e`.
+
+#### Network Bridges (Fallback)
+
+If faucets fail, bridge from Ethereum Sepolia:
+
+| Bridge          | Purpose                          | Link                                              |
+| --------------- | -------------------------------- | ------------------------------------------------- |
+| Superbridge     | Bridge SepoliaETH → Base Sepolia | [superbridge.app](https://superbridge.app/)       |
+| Arbitrum Portal | Cross-chain transfers            | [portal.arbitrum.io](https://portal.arbitrum.io/) |
+
+#### Recommended Flow
+
+1. **Get Ethereum Sepolia ETH** from [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de/) (no mainnet ETH needed)
+2. **Bridge to Base Sepolia** using [Superbridge](https://superbridge.app/)
+3. **Get USDC** from [Circle Faucet](https://faucet.circle.com/)
+4. **Fund your escrow**
+
+This flow avoids the mainnet ETH requirement entirely.
+
+### 5. Add Base Sepolia to MetaMask
+
+| Setting      | Value                          |
 | ------------ | ------------------------------ |
+| Network Name | Base Sepolia                   |
+| RPC URL      | `https://sepolia.base.org`     |
+| Chain ID     | `84532`                        |
+| Symbol       | `ETH`                          |
+| Explorer     | `https://sepolia.basescan.org` |
 
-| Network Name | Base Sepolia                   |
-
-| RPC URL      | `https://sepolia.base.org`     |
-
-| Chain ID     | `84532`                        |
-
-| Symbol       | `ETH`                          |
-
-| Explorer     | `https://sepolia.basescan.org` |
-
-**---**
-
-**## ⚙️ Configuration**
-
-**### Hardhat Configuration (`hardhat.config.ts`)**
-
-```typescript
-import { defineConfig, configVariable } from "hardhat/config";
-
-import hardhatToolboxViem from "@nomicfoundation/hardhat-toolbox-viem";
-
-import hardhatNetworkHelpers from "@nomicfoundation/hardhat-network-helpers";
-
-export default defineConfig({
-  plugins: [hardhatToolboxViem, hardhatNetworkHelpers],
-
-  solidity: {
-    profiles: {
-      default: { version: "0.8.28" },
-
-      production: {
-        version: "0.8.28",
-
-        settings: { optimizer: { enabled: true, runs: 200 } },
-      },
-    },
-  },
-
-  networks: {
-    hardhatMainnet: { type: "edr-simulated", chainType: "l1" },
-
-    hardhatOp: { type: "edr-simulated", chainType: "op" },
-
-    baseSepolia: {
-      type: "http",
-
-      chainType: "op",
-
-      url: configVariable("BASE_SEPOLIA_RPC_URL"),
-
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-
-      gasMultiplier: 1.2,
-    },
-
-    sepolia: {
-      type: "http",
-
-      chainType: "l1",
-
-      url: configVariable("SEPOLIA_RPC_URL"),
-
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-    },
-  },
-
-  verify: {
-    etherscan: { apiKey: configVariable("ETHERSCAN_API_KEY") },
-  },
-});
-```
-
-**---**
-
-**## 📜 Smart Contract**
-
-**### Key Functions**
-
-| Function                                         | Access            | Description                    |
-
-| ------------------------------------------------ | ----------------- | ------------------------------ |
-
-| `createEscrow(freelancer, arbitrator, duration)` | Client            | Create new escrow              |
-
-| `fundEscrow(id, amount)`                         | Client            | Deposit USDC → Aave V3         |
-
-| `startWork(id)`                                  | Client            | Start work timer               |
-
-| `releasePayment(id)`                             | Client            | Release payment + yield split  |
-
-| `refundClient(id)`                               | Client            | Refund with yield compensation |
-
-| `raiseDispute(id)`                               | Client/Freelancer | Raise dispute                  |
-
-| `resolveDispute(id, winner)`                     | Arbitrator        | Resolve dispute                |
-
-| `pause()` / `unpause()`                          | Owner             | Emergency pause                |
-
-| `getEscrow(id)`                                  | Anyone            | View escrow details            |
-
-**### Events**
-
-```solidity
-
-event EscrowCreated(uint256 indexed escrowId, address client, address freelancer, uint256 duration);
-
-event EscrowFunded(uint256 indexed escrowId, uint256 amount, bool yieldActive);
-
-event EscrowStarted(uint256 indexed escrowId, uint256 startTime);
-
-event EscrowReleased(uint256 indexed escrowId, address freelancer, uint256 amount, uint256 yieldBonus);
-
-event EscrowRefunded(uint256 indexed escrowId, address client, uint256 amount, uint256 yieldCompensation);
-
-event DisputeRaised(uint256 indexed escrowId, address raisedBy);
-
-event DisputeResolved(uint256 indexed escrowId, address winner, uint256 amount, uint256 arbitratorFee);
-
-event Paused();
-
-event Unpaused();
-
-```
-
-**---**
-
-**## 🧪 Testing**
-
-**### Run All Tests**
+### 6. Run the Frontend
 
 ```bash
-
-npm test
-
+cd frontend
+pnpm dev
 ```
 
-\***\*Expected output:\*\***
+Open [http://localhost:3000](http://localhost:3000).
 
+---
+
+## 🔄 Full Lifecycle Walkthrough
+
+Here's the complete flow with **real transaction hashes** from Base Sepolia.
+
+### Step 1: Deploy the Contract
+
+```bash
+pnpm hardhat ignition deploy ignition/modules/EscrowBase.ts --network baseSepolia
 ```
 
+**Deployed at:** `0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`
+
+### Step 2: Approve USDC
+
+```bash
+pnpm hardhat run scripts/approve-usdc.ts --network baseSepolia
+```
+
+**Transaction:** [`0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787`](https://sepolia.basescan.org/tx/0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787)
+
+### Step 3: Create Escrow
+
+```bash
+pnpm hardhat run scripts/create-escrow.ts --network baseSepolia
+```
+
+**Transaction:** [`0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150`](https://sepolia.basescan.org/tx/0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150)
+
+| Field      | Value                                        |
+| ---------- | -------------------------------------------- |
+| Client     | `0x98b7a3b289a20e5fb382e309e830db6dfa7d530e` |
+| Freelancer | `0x1B9c6612F602AF4221295c0C085a676B74597746` |
+| Arbitrator | `0x98b7a3b289a20e5fb382e309e830db6dfa7d530e` |
+| Duration   | 7 days                                       |
+
+### Step 4: Fund Escrow
+
+```bash
+pnpm hardhat run scripts/fund-escrow.ts --network baseSepolia
+```
+
+**Transaction:** [`0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26`](https://sepolia.basescan.org/tx/0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26)
+
+**Result:** USDC supplied to Aave V3, aTokens minted to escrow ✅
+
+### Step 5: Verify On-Chain State
+
+```bash
+pnpm hardhat run scripts/check-escrow.ts --network baseSepolia
+```
+
+```
+Escrow #0:
+  Amount:        10 USDC
+  State:         1 (Funded)
+  Yield Active:  true ✅
+```
+
+### Step 6: Start Work (via Frontend)
+
+Click **Start Work** in the UI → confirm in MetaMask.
+
+### Step 7: Wait for Duration
+
+Escrow duration = 7 days. Real time must pass.
+
+### Step 8: Release Payment (via Frontend)
+
+After 7 days, click **Release Payment**. Yield is split:
+
+- **Freelancer:** principal + 70% of yield
+- **Client:** 30% of yield
+
+### Step 9: Verify Yield Split
+
+```bash
+pnpm hardhat run scripts/check-balances.ts --network baseSepolia
+```
+
+**Before:**
+
+```
+Client:     30.00 USDC
+Freelancer: 30.00 USDC
+```
+
+**After 7 days at 107% APY (testnet):**
+
+```
+Client:     30.06 USDC (+0.06 = 30% of yield)
+Freelancer: 40.14 USDC (+10.14 = 10 + 70% of yield)
+```
+
+---
+
+## 🧪 Testing
+
+### Run All Tests
+
+```bash
+pnpm hardhat test
+```
+
+**Expected Output:**
+
+```
 Running node:test tests
 
-  EscrowWithYield
+  EscrowWithYield
+    ✔ Should create an escrow
+    ✔ Should fund an escrow and record Aave shares
+    ✔ Should calculate accrued yield correctly
+    ✔ Should start work
+    ✔ Should distribute yield 70/30 on release
+    ✔ Should release principal when no yield is earned
+    ✔ Should return principal and all yield on refund
+    ✔ Should refund principal when no yield is earned
+    ✔ Should allow the client to raise a dispute
+    ✔ Should distribute dispute yield correctly
+    ✔ Should allow the client to win a dispute
+    ✔ Should account for multiple escrows sharing Aave
+    ✔ Should preserve remaining escrow accounting after withdrawal
+    ✔ Should reject release before the duration expires
+    ✔ Should prevent a non-client from funding an escrow
+    ✔ Should prevent an unrelated account from raising a dispute
+    ✔ Should prevent a non-arbitrator from resolving a dispute
+    ✔ Should pause and unpause the protocol
+    ✔ Should prevent creating escrows while paused
+    ✔ Should handle 1 wei of yield without losing funds
+    ✔ Should split yield correctly when 70/30 is exact
 
-    ✔ Should create an escrow
-
-    ✔ Should fund an escrow
-
-    ✔ Should release payment with yield bonus
-
-    ✔ Should refund client with yield compensation
-
-4 passing
-
+21 passing
 ```
 
-**### Test Coverage**
-
-| Test                | What It Validates                          |
-
-| ------------------- | ------------------------------------------ |
-
-| \***\*Create Escrow\*\***   | Client, freelancer, arbitrator assignments |
-
-| \***\*Fund Escrow\*\***     | USDC transfer + Aave supply                |
-
-| \***\*Release Payment\*\*** | Yield split + freelancer payment           |
-
-| \***\*Refund Client\*\***   | Yield compensation + state transition      |
-
-**---**
-
-**## 🚢 Deployment**
-
-**### Deploy to Base Sepolia**
-
-```bash
-
-npm run deploy:base
-
-```
-
-\***\*Output:\*\***
-
-```
-
-Hardhat Ignition 🚀
-
-Deploying [ EscrowBaseModule ]
-
-Batch #1
-
-  Executed EscrowBaseModule#EscrowWithYield
-
-[ EscrowBaseModule ] successfully deployed 🚀
-
-Deployed Addresses
-
-EscrowBaseModule#EscrowWithYield - 0x96266591403b08e7ccF01500fbc74547fD6F4E13
-
-```
-
-**### Verify Contract**
-
-```bash
-
-npx hardhat ignition verify chain-84532 --network baseSepolia
-
-```
-
-\***\*Verified on:\*\***
-
-- BaseScan
-
-- Blockscout
-
-- Sourcify
-
-**---**
-
-**## 📜 Scripts**
-
-**### Available Commands**
-
-| Script              | Command                  | Description                  |
-
-| ------------------- | ------------------------ | ---------------------------- |
-
-| Check Balance       | `npm run check-balance`  | Get USDC balance             |
-
-| Check Both Balances | `npm run check-balances` | Client + freelancer balances |
-
-| Check Escrow        | `npm run check-escrow`   | View escrow state            |
-
-| Approve USDC        | `npm run approve`        | Approve escrow spending      |
-
-| Create Escrow       | `npm run create-escrow`  | Create new escrow            |
-
-| Fund Escrow         | `npm run fund`           | Fund escrow → Aave           |
-
-| Start Work          | `npm run start-work`     | Start work timer             |
-
-| Release             | `npm run release`        | Release payment              |
-
-**---**
-
-**## 🔄 Full Lifecycle Walkthrough**
-
-**### Real Test on Base Sepolia**
-
-Here's the complete lifecycle with \***\*actual transaction hashes\*\*** from the test run:
-
-**#### 1. Deploy Contract**
-
-```bash
-
-npm run deploy:base
-
-```
-
-\***\*Contract:\*\*** `0x96266591403b08e7ccF01500fbc74547fD6F4E13`
-
-**#### 2. Approve USDC Spending**
-
-```bash
-
-npm run approve
-
-```
-
-\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787" target="_blank" rel="noopener noreferrer">`0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787`</a>
-
-**#### 3. Create Escrow #0**
-
-```bash
-
-npm run create-escrow
-
-```
-
-\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150" target="_blank" rel="noopener noreferrer">`0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150`</a>
-
-| Field      | Value                                        |
-
-| ---------- | -------------------------------------------- |
-
-| Client     | `0x98b7a3b289a20e5fb382e309e830db6dfa7d530e` |
-
-| Freelancer | `0x1B9c6612F602AF4221295c0C085a676B74597746` |
-
-| Arbitrator | `0x98b7a3b289a20e5fb382e309e830db6dfa7d530e` |
-
-| Duration   | 7 days                                       |
-
-**#### 4. Fund Escrow with 10 USDC**
-
-```bash
-
-npm run fund
-
-```
-
-\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26" target="_blank" rel="noopener noreferrer">`0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26`</a>
-
-\***\*Result:\*\*** `Yield Active: true` — USDC now earning yield in Aave V3 ✅
-
-**#### 5. Start Work**
-
-```bash
-
-npm run start-work
-
-```
-
-\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0x4a036e85d25b908afad2d4bc269847b78bff7dc407f2ddbab0e6ed7a15303895" target="_blank" rel="noopener noreferrer">`0x4a036e85d25b908afad2d4bc269847b78bff7dc407f2ddbab0e6ed7a15303895`</a>
-
-**#### 6. Release Payment**
-
-```bash
-
-npm run release
-
-```
-
-\***\*Transaction:\*\*** <a href="https://sepolia.basescan.org/tx/0x5a22da6011f09e11362f414ad03de3cbdce3f993212ba802929f1ef7a94d8716" target="_blank" rel="noopener noreferrer">`0x5a22da6011f09e11362f414ad03de3cbdce3f993212ba802929f1ef7a94d8716`</a>
-
-**#### 7. Verify Yield Split**
-
-```bash
-
-npm run check-balances
-
-```
-
-\***\*Before vs After:\*\***
-
-| Account    | Before     | After          | Change          |
-
-| ---------- | ---------- | -------------- | --------------- |
-
-| Client     | 39.00 USDC | 39.000304 USDC | +0.000304 USDC  |
-
-| Freelancer | 30.00 USDC | 40.000708 USDC | +10.000708 USDC |
-
-\***\*Yield Breakdown:\*\***
-
-- Total yield: \***\*0.001012 USDC\*\***
-
-- Freelancer bonus (70%): \***\*0.000708 USDC\*\***
-
-- Client discount (30%): \***\*0.000304 USDC\*\***
-
-\***\*Math verified:\*\*** ✅
-
-**---**
-
-**## 💵 Real Yield Example**
-
-**### Why the Yield is Small in the Demo**
-
-The yield was tiny because the escrow was funded and released in \***\*\~30 seconds\*\***. The yield formula is:
-
-```
-
-Yield = Amount × APY × (Time / 365 days)
-
-```
-
-With:
-
-- Amount = 10 USDC
-
-- APY = 107% (testnet rate)
-
-- Time = 30 seconds
-
-\***\*Result:\*\*** 0.001012 USDC
-
-**### Mainnet Projection (5% APY)**
-
-| Escrow  | Duration | Freelancer Bonus | Client Discount |
-
-| ------- | -------- | ---------------- | --------------- |
-
-| $100    | 1 week   | $0.067           | $0.029          |
-
-| $500    | 2 weeks  | $0.67            | $0.29           |
-
-| $5,000  | 1 month  | $14.58           | $6.25           |
-
-| $20,000 | 3 months | $175.00          | $75.00          |
-
-\***\*On mainnet, this is a legitimate economic advantage.\*\***
-
-**---**
-
-**## 🔒 Security**
-
-**### Security Features**
-
-- ✅ \***\*ReentrancyGuard\*\*** — Prevents reentrancy attacks
-
-- ✅ \***\*Ownable\*\*** — Administrative functions protected
-
-- ✅ \***\*Role-based access\*\*** — Client / Freelancer / Arbitrator modifiers
-
-- ✅ \***\*State validation\*\*** — `inState` modifier
-
-- ✅ \***\*Emergency pause\*\*** — `pause()` / `unpause()`
-
-- ✅ \***\*Safe math\*\*** — Solidity 0.8.x overflow protection
-
-- ✅ \***\*Event logging\*\*** — All state changes logged
-
-- ✅ \***\*Aave V3\*\*** — Battle-tested yield protocol
-
-**### Known Limitations**
-
-- ⚠️ Simplified arbitration (no Kleros integration yet)
-
-- ⚠️ No time-lock auto-release (in case of client disappearance)
-
-- ⚠️ Testnet APY is inflated (107% vs 4-8% mainnet)
-
-**### Recommended Improvements**
-
-- [ ] Kleros integration for decentralized arbitration
-
-- [ ] 14-day time-lock auto-release
-
-- [ ] Multi-signature arbitration
-
-- [ ] Reputation system
-
-- [ ] Milestone-based payments
-
-**---**
-
-**## 🗺️ Roadmap**
-
-**### Phase 1: Backend ✅**
-
-- [x] Smart contract with Aave V3
-
-- [x] Hardhat 3 + Viem setup
-
-- [x] 4 passing tests
-
+### What Each Test Verifies
+
+| #   | Test                        | What It Proves                          |
+| --- | --------------------------- | --------------------------------------- |
+| 1   | Create escrow               | Client/freelancer/arbitrator assignment |
+| 2   | Fund escrow                 | USDC transfer + aToken shares recorded  |
+| 3   | Calculate yield             | Proportional share math is correct      |
+| 4   | Start work                  | Timer starts, state transitions         |
+| 5   | Release 70/30               | Freelancer gets 70%, client 30%         |
+| 6   | Release no yield            | Principal returned exactly              |
+| 7   | Refund with yield           | Client gets principal + 100% yield      |
+| 8   | Refund no yield             | Principal returned exactly              |
+| 9   | Raise dispute               | Unilateral dispute triggers state       |
+| 10  | Dispute yield split         | Arbitrator 10%, winner 90% + principal  |
+| 11  | Dispute won by client       | Symmetric case verified                 |
+| 12  | Multiple escrows share Aave | Proportional accounting correct         |
+| 13  | Withdraw doesn't corrupt    | Remaining escrow's shares intact        |
+| 14  | Release before duration     | Reverts correctly                       |
+| 15  | Non-client fund             | Access control enforced                 |
+| 16  | Unrelated dispute           | Access control enforced                 |
+| 17  | Non-arbitrator resolve      | Access control enforced                 |
+| 18  | Pause/unpause               | Owner control works                     |
+| 19  | Paused creation             | Cannot create new escrows               |
+| 20  | 1 wei yield                 | No funds lost on tiny yields            |
+| 21  | Exact 70/30 split           | Integer math correct                    |
+
+---
+
+## 🔒 Security
+
+### Security Features
+
+- ✅ **ReentrancyGuard** on all state-changing functions with external calls
+- ✅ **Ownable2Step** — two-step ownership transfer prevents accidental lockout
+- ✅ **SafeERC20** — handles non-standard ERC20 tokens
+- ✅ **Access control** — client/freelancer/arbitrator modifiers
+- ✅ **State validation** — `inState` modifier prevents invalid transitions
+- ✅ **Emergency pause** — owner-controlled circuit breaker
+- ✅ **Duration enforcement** — work must complete before release
+- ✅ **Atomic yield split** — 70/30 verified by 21 tests
+- ✅ **Proportional share accounting** — no rounding exploits
+
+### Known Limitations
+
+- ⚠️ **Single arbitrator** — no decentralized arbitration (Kleros integration planned)
+- ⚠️ **No time-lock auto-release** — if client disappears, freelancer can't force release
+- ⚠️ **Testnet only** — not audited for mainnet
+- ⚠️ **Testnet APY is inflated** — real APY on Base Mainnet is ~4-8%
+
+### Recommended Improvements
+
+- [ ] **Kleros integration** — decentralized arbitration
+- [ ] **14-day time-lock auto-release** — prevent deadlock
+- [ ] **Multi-signature arbitration** — for high-value escrows
+- [ ] **Reputation system** — track successful completions
+- [ ] **Milestone-based payments** — release in stages
+- [ ] **Multi-token support** — ETH, DAI, USDT
+
+---
+
+## 🗺️ Roadmap
+
+### Phase 1: Backend ✅ Complete
+
+- [x] Smart contract with Aave V3 integration
+- [x] Scaled aToken share accounting
+- [x] 21 passing tests
 - [x] Base Sepolia deployment
-
 - [x] Triple-verified on explorers
-
 - [x] Full lifecycle tested
+- [x] Real yield accrual confirmed
 
-- [x] Real yield generation confirmed
+### Phase 2: Frontend ✅ Complete
 
-**### Phase 2: Frontend 🚧**
+- [x] Next.js 16 dashboard
+- [x] Reown AppKit wallet connection
+- [x] Create escrow UI
+- [x] Fund escrow with approval flow
+- [x] Escrow cards with real-time state
+- [x] Yield display
 
-- [ ] Next.js 14 app
+### Phase 3: Polish 🚧 In Progress
 
-- [ ] Reown AppKit wallet connection
+- [ ] Toast notifications (replace alerts)
+- [ ] Auto-refresh after transactions
+- [ ] Real-time yield ticker
+- [ ] Loading skeletons
+- [ ] Mobile responsive design
+- [ ] Multi-escrow dashboard with filters
 
-- [ ] Create escrow UI
-
-- [ ] Escrow dashboard
-
-- [ ] Release / refund actions
-
-**### Phase 3: Production 📦**
+### Phase 4: Production 📦
 
 - [ ] Base Mainnet deployment
-
-- [ ] Real Aave V3 on mainnet
-
 - [ ] Security audit
+- [ ] Gas optimization report
+- [ ] Frontend deployed to Vercel
 
-- [ ] Gas optimization
+### Phase 5: Advanced 🚀
 
-**### Phase 4: Advanced 🚀**
-
-- [ ] Kleros arbitration
-
+- [ ] Kleros arbitration integration
 - [ ] Time-lock auto-release
-
 - [ ] Reputation system
-
 - [ ] Multi-token support
-
 - [ ] DAO governance
 
-**---**
+---
 
-**## 📄 License**
+## 📄 License
 
-MIT License — see <a href="LICENSE" target="_blank" rel="noopener noreferrer">https://github.com/AbdElRahmanLotfy/freelance-escrow?tab=MIT-1-ov-file</a> for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
-**---**
+---
 
-**## 🙏 Acknowledgments**
+## 🙏 Acknowledgments
 
-- <a href="https://aave.com/" target="_blank" rel="noopener noreferrer">Aave</a> — Yield protocol
+- [Aave](https://aave.com/) — Yield protocol
+- [OpenZeppelin](https://openzeppelin.com/) — Security standards
+- [Hardhat](https://hardhat.org/) — Development environment
+- [Viem](https://viem.sh/) — Ethereum interaction
+- [Base](https://base.org/) — L2 network
+- [Circle](https://circle.com/) — USDC
+- [Reown](https://reown.com/) — Wallet connection
 
-- <a href="https://openzeppelin.com/" target="_blank" rel="noopener noreferrer">OpenZeppelin</a> — Security standards
+---
 
-- <a href="https://hardhat.org/" target="_blank" rel="noopener noreferrer">Hardhat</a> — Development environment
+## 📞 Connect
 
-- <a href="https://viem.sh/" target="_blank" rel="noopener noreferrer">Viem</a> — Ethereum interaction
+**Abdelrahman Lotfy**
 
-- <a href="https://base.org/" target="_blank" rel="noopener noreferrer">Base</a> — L2 network
+- 🐙 **GitHub:** [@AbdElRahmanLotfy](https://github.com/AbdElRahmanLotfy)
+- 💼 **LinkedIn:** [abdelrahmanlotfy](https://www.linkedin.com/in/abdelrahmanlotfy-a051bb174)
+- 📧 **Email:** [abdelrahmannnn11@gmail.com](mailto:abdelrahmannnn11@gmail.com)
+- 🎵 **SoundCloud:** [Abdelrahman Lotfy](https://soundcloud.com/abdelrahman-lotfy-650305495)
+- 🎮 **Overwatch:** [Career Profile](https://overwatch.blizzard.com/en-us/career/d35ca8afbf4393a0e8fe26a1c903a50b4d%7Ce0f041b6b275376214d42347cd250362/)
 
-- <a href="https://circle.com/" target="_blank" rel="noopener noreferrer">Circle</a> — USDC
+---
 
-**---**
-
-\***\*Built with ❤️ on Base Sepolia\*\***
+**Built with ❤️ on Base Sepolia by Abdelrahman Lotfy**

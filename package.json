@@ -12,6 +12,7 @@
     "check-balance": "hardhat run scripts/check-balance.ts --network baseSepolia",
     "approve": "hardhat run scripts/approve-usdc.ts --network baseSepolia",
     "create-escrow": "hardhat run scripts/create-escrow.ts --network baseSepolia",
+    "get-ausdc": "hardhat run scripts/get-ausdc.ts --network baseSepolia",
     "fund": "hardhat run scripts/fund-escrow.ts --network baseSepolia",
     "check-escrow": "hardhat run scripts/check-escrow.ts --network baseSepolia",
     "start-work": "hardhat run scripts/start-work.ts --network baseSepolia",
@@ -32,6 +33,7 @@
     "viem": "^2.55.19"
   },
   "dependencies": {
+    "@nomicfoundation/edr": "^0.22.1",
     "@openzeppelin/contracts": "^5.6.1",
     "dotenv": "^17.4.2",
     "ethers": "^6.17.0"

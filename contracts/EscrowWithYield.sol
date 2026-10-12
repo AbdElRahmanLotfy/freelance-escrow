@@ -2,8 +2,22 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+interface IAaveProtocolDataProvider {
+    function getReserveTokensAddresses(
+        address asset
+    )
+        external
+        view
+        returns (
+            address aTokenAddress,
+            address stableDebtTokenAddress,
+            address variableDebtTokenAddress
+        );
+}
 
 interface IAavePool {
     function supply(
@@ -18,10 +32,40 @@ interface IAavePool {
         uint256 amount,
         address to
     ) external returns (uint256);
+
+    function getReserveData(
+        address asset
+    )
+        external
+        view
+        returns (
+            uint256 configuration,
+            uint128 liquidityIndex,
+            uint128 currentLiquidityRate,
+            uint128 variableBorrowIndex,
+            uint128 currentVariableBorrowRate,
+            uint40 lastUpdateTimestamp,
+            uint16 id,
+            address aTokenAddress,
+            address stableDebtTokenAddress,
+            address variableDebtTokenAddress,
+            address interestRateStrategyAddress
+        );
 }
 
-contract EscrowWithYield is Ownable, ReentrancyGuard {
-    // State enum
+interface IAToken is IERC20 {
+    function scaledBalanceOf(
+        address user
+    ) external view returns (uint256);
+}
+
+contract EscrowWithYield is Ownable2Step, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
+    // =============================================================
+    //                           TYPES
+    // =============================================================
+
     enum EscrowState {
         Created,
         Funded,
@@ -31,57 +75,155 @@ contract EscrowWithYield is Ownable, ReentrancyGuard {
         Disputed
     }
 
-    // Struct to store escrow details
     struct EscrowDetails {
         address client;
         address freelancer;
         address arbitrator;
+
+        // Original principal deposited by the client.
         uint256 amount;
+
+        // Yield allocated to this escrow when settled.
         uint256 yieldEarned;
+
+        // Timestamp at which work started.
         uint256 startTime;
-        uint256 duration; // in seconds
+
+        // Work duration in seconds.
+        uint256 duration;
+
         EscrowState state;
+
         bool clientDisputed;
         bool freelancerDisputed;
+
+        // Whether this escrow currently owns an Aave position.
         bool yieldActive;
+
+        /*
+         * Scaled aToken units belonging to this escrow.
+         *
+         * Aave aTokens use a scaled balance internally.
+         * Tracking this allows multiple escrows to share one
+         * aUSDC position safely.
+         */
+        uint256 scaledATokenShares;
     }
 
-    // State variables
-    IERC20 public stablecoin;
-    IAavePool public yieldStrategy;
+    // =============================================================
+    //                       STATE VARIABLES
+    // =============================================================
+
+    IERC20 public immutable stablecoin;
+
+    IAavePool public immutable yieldStrategy;
+
+    IAToken public immutable aToken;
+
     mapping(uint256 => EscrowDetails) public escrows;
+
     uint256 public escrowCounter;
+
     bool public isPaused;
 
-    // Events
-    event EscrowCreated(uint256 indexed escrowId, address client, address freelancer, uint256 duration);
-    event EscrowFunded(uint256 indexed escrowId, uint256 amount, bool yieldActive);
-    event EscrowStarted(uint256 indexed escrowId, uint256 startTime);
-    event EscrowReleased(uint256 indexed escrowId, address freelancer, uint256 amount, uint256 yieldBonus);
-    event EscrowRefunded(uint256 indexed escrowId, address client, uint256 amount, uint256 yieldCompensation);
-    event DisputeRaised(uint256 indexed escrowId, address raisedBy);
-    event DisputeResolved(uint256 indexed escrowId, address winner, uint256 amount, uint256 arbitratorFee);
-    event Paused();
-    event Unpaused();
+    /*
+     * Sum of all original principals currently represented by
+     * active Aave positions.
+     */
+    uint256 public totalYieldPrincipal;
 
-    // Modifiers
+    /*
+     * Sum of all scaled aToken shares belonging to active escrows.
+     */
+    uint256 public totalScaledATokenShares;
+
+    // =============================================================
+    //                           EVENTS
+    // =============================================================
+
+    event EscrowCreated(
+        uint256 indexed escrowId,
+        address indexed client,
+        address indexed freelancer,
+        uint256 duration
+    );
+
+    event EscrowFunded(
+        uint256 indexed escrowId,
+        uint256 amount,
+        bool yieldActive
+    );
+
+    event EscrowStarted(
+        uint256 indexed escrowId,
+        uint256 startTime
+    );
+
+    event EscrowReleased(
+        uint256 indexed escrowId,
+        address indexed freelancer,
+        uint256 amount,
+        uint256 yieldBonus
+    );
+
+    event EscrowRefunded(
+        uint256 indexed escrowId,
+        address indexed client,
+        uint256 amount,
+        uint256 yieldCompensation
+    );
+
+    event DisputeRaised(
+        uint256 indexed escrowId,
+        address indexed raisedBy
+    );
+
+    event DisputeResolved(
+        uint256 indexed escrowId,
+        address indexed winner,
+        uint256 amount,
+        uint256 arbitratorFee
+    );
+
+    event Paused(address indexed account);
+    event Unpaused(address indexed account);
+
+    // =============================================================
+    //                         MODIFIERS
+    // =============================================================
+
     modifier onlyClient(uint256 _escrowId) {
-        require(msg.sender == escrows[_escrowId].client, "Only client can call");
+        require(
+            msg.sender == escrows[_escrowId].client,
+            "Only client can call"
+        );
         _;
     }
 
     modifier onlyFreelancer(uint256 _escrowId) {
-        require(msg.sender == escrows[_escrowId].freelancer, "Only freelancer can call");
+        require(
+            msg.sender == escrows[_escrowId].freelancer,
+            "Only freelancer can call"
+        );
         _;
     }
 
     modifier onlyArbitrator(uint256 _escrowId) {
-        require(msg.sender == escrows[_escrowId].arbitrator, "Only arbitrator can call");
+        require(
+            msg.sender == escrows[_escrowId].arbitrator,
+            "Only arbitrator can call"
+        );
         _;
     }
 
-    modifier inState(uint256 _escrowId, EscrowState _state) {
-        require(escrows[_escrowId].state == _state, "Invalid escrow state");
+    modifier inState(
+        uint256 _escrowId,
+        EscrowState _state
+    ) {
+        require(
+            escrows[_escrowId].state == _state,
+            "Invalid escrow state"
+        );
         _;
     }
 
@@ -90,24 +232,69 @@ contract EscrowWithYield is Ownable, ReentrancyGuard {
         _;
     }
 
-    // Constructor
-    constructor(address _stablecoin, address _aavePool) Ownable(msg.sender) {
-        require(_stablecoin != address(0), "Invalid stablecoin");
-        require(_aavePool != address(0), "Invalid Aave pool");
-        stablecoin = IERC20(_stablecoin);
-        yieldStrategy = IAavePool(_aavePool);
-    }
+    // =============================================================
+    //                        CONSTRUCTOR
+    // =============================================================
 
-    // Create escrow
+   constructor(
+    address _stablecoin,
+    address _aavePool,
+    address _aToken
+)
+    Ownable(msg.sender)
+{
+    require(
+        _stablecoin != address(0),
+        "Invalid stablecoin"
+    );
+
+    require(
+        _aavePool != address(0),
+        "Invalid Aave pool"
+    );
+
+    require(
+        _aToken != address(0),
+        "Invalid aToken"
+    );
+
+    stablecoin = IERC20(_stablecoin);
+
+    yieldStrategy = IAavePool(_aavePool);
+
+    aToken = IAToken(_aToken);
+}
+    // =============================================================
+    //                       CREATE ESCROW
+    // =============================================================
+
     function createEscrow(
         address _freelancer,
         address _arbitrator,
         uint256 _duration
-    ) external notPaused {
-        require(_freelancer != address(0), "Invalid freelancer");
-        require(_arbitrator != address(0), "Invalid arbitrator");
-        require(_duration > 0, "Duration must be > 0");
-        require(_freelancer != msg.sender, "Cannot hire yourself");
+    )
+        external
+        notPaused
+    {
+        require(
+            _freelancer != address(0),
+            "Invalid freelancer"
+        );
+
+        require(
+            _arbitrator != address(0),
+            "Invalid arbitrator"
+        );
+
+        require(
+            _duration > 0,
+            "Duration must be > 0"
+        );
+
+        require(
+            _freelancer != msg.sender,
+            "Cannot hire yourself"
+        );
 
         escrows[escrowCounter] = EscrowDetails({
             client: msg.sender,
@@ -120,174 +307,481 @@ contract EscrowWithYield is Ownable, ReentrancyGuard {
             state: EscrowState.Created,
             clientDisputed: false,
             freelancerDisputed: false,
-            yieldActive: false
+            yieldActive: false,
+            scaledATokenShares: 0
         });
 
-        emit EscrowCreated(escrowCounter, msg.sender, _freelancer, _duration);
+        emit EscrowCreated(
+            escrowCounter,
+            msg.sender,
+            _freelancer,
+            _duration
+        );
+
         escrowCounter++;
     }
 
-    // Fund escrow with USDC and deposit to Aave
-    function fundEscrow(uint256 _escrowId, uint256 _amount)
+    // =============================================================
+    //                       FUND ESCROW
+    // =============================================================
+
+    function fundEscrow(
+        uint256 _escrowId,
+        uint256 _amount
+    )
         external
         onlyClient(_escrowId)
         inState(_escrowId, EscrowState.Created)
         nonReentrant
         notPaused
     {
-        require(_amount > 0, "Amount must be > 0");
+        require(
+            _amount > 0,
+            "Amount must be > 0"
+        );
 
-        // Transfer USDC from client to contract
-        stablecoin.transferFrom(msg.sender, address(this), _amount);
+        EscrowDetails storage escrow =
+            escrows[_escrowId];
 
-        EscrowDetails storage escrow = escrows[_escrowId];
+        /*
+         * Pull USDC from client.
+         */
+        stablecoin.safeTransferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
+
         escrow.amount = _amount;
 
-        // Deposit into Aave V3
-        bool depositSuccess = _depositToYield(_amount);
+        /*
+         * Attempt to deposit into Aave.
+         */
+        bool deposited = _depositToYield(
+            _amount,
+            _escrowId
+        );
 
-        escrow.yieldActive = depositSuccess;
+        escrow.yieldActive = deposited;
+
+        if (!deposited) {
+            /*
+             * Fallback:
+             *
+             * The escrow remains usable without yield.
+             * The USDC stays inside this contract.
+             */
+            escrow.state = EscrowState.Funded;
+
+            emit EscrowFunded(
+                _escrowId,
+                _amount,
+                false
+            );
+
+            return;
+        }
+
         escrow.state = EscrowState.Funded;
 
-        emit EscrowFunded(_escrowId, _amount, depositSuccess);
+        emit EscrowFunded(
+            _escrowId,
+            _amount,
+            true
+        );
     }
 
-    // Internal: Deposit USDC to Aave V3
-    function _depositToYield(uint256 _amount) internal returns (bool) {
-        // Reset approval to 0 first (protection against front-running)
-        stablecoin.approve(address(yieldStrategy), 0);
+    // =============================================================
+    //                    DEPOSIT INTO AAVE
+    // =============================================================
 
-        // Approve Aave to spend USDC
-        bool approveSuccess = stablecoin.approve(address(yieldStrategy), _amount);
-        if (!approveSuccess) {
-            return false;
-        }
+    function _depositToYield(
+        uint256 _amount,
+        uint256 _escrowId
+    )
+        internal
+        returns (bool)
+    {
+        /*
+         * Record scaled balance before supply.
+         */
+        uint256 scaledBefore =
+            aToken.scaledBalanceOf(address(this));
 
-        // Call Aave V3 supply
-        try yieldStrategy.supply(address(stablecoin), _amount, address(this), 0) {
+        /*
+         * Approve Aave.
+         */
+        stablecoin.forceApprove(
+            address(yieldStrategy),
+            _amount
+        );
+
+        try yieldStrategy.supply(
+            address(stablecoin),
+            _amount,
+            address(this),
+            0
+        ) {
+            /*
+             * Clear allowance after supply.
+             */
+            stablecoin.forceApprove(
+                address(yieldStrategy),
+                0
+            );
+
+            /*
+             * Record scaled balance after supply.
+             */
+            uint256 scaledAfter =
+                aToken.scaledBalanceOf(address(this));
+
+            require(
+                scaledAfter > scaledBefore,
+                "No aToken received"
+            );
+
+            uint256 shares =
+                scaledAfter - scaledBefore;
+
+            escrows[_escrowId].scaledATokenShares =
+                shares;
+
+            totalScaledATokenShares += shares;
+
+            totalYieldPrincipal +=
+                escrows[_escrowId].amount;
+
             return true;
         } catch {
+            stablecoin.forceApprove(
+                address(yieldStrategy),
+                0
+            );
+
             return false;
         }
     }
 
-    // Internal: Withdraw USDC from Aave V3
-    function _withdrawFromYield(uint256 _amount) internal returns (bool) {
-        try yieldStrategy.withdraw(address(stablecoin), _amount, address(this)) {
-            return true;
-        } catch {
-            return false;
+    // =============================================================
+    //                CURRENT AAVE VALUE FOR ESCROW
+    // =============================================================
+
+    function getEscrowYieldValue(
+        uint256 _escrowId
+    )
+        public
+        view
+        returns (
+            uint256 principal,
+            uint256 currentValue,
+            uint256 currentYield
+        )
+    {
+        EscrowDetails memory escrow =
+            escrows[_escrowId];
+
+        principal = escrow.amount;
+
+        if (
+            !escrow.yieldActive ||
+            escrow.scaledATokenShares == 0 ||
+            totalScaledATokenShares == 0
+        ) {
+            return (
+                principal,
+                principal,
+                0
+            );
+        }
+
+        uint256 currentATokenBalance =
+            aToken.balanceOf(address(this));
+
+        currentValue =
+            (
+                currentATokenBalance *
+                escrow.scaledATokenShares
+            ) /
+            totalScaledATokenShares;
+
+        if (currentValue > principal) {
+            currentYield =
+                currentValue - principal;
         }
     }
 
-    // Start work
-    function startWork(uint256 _escrowId)
+    // =============================================================
+    //                   WITHDRAW ESCROW POSITION
+    // =============================================================
+
+    function _withdrawEscrowFromYield(
+        uint256 _escrowId
+    )
+        internal
+        returns (
+            uint256 principal,
+            uint256 totalReceived,
+            uint256 yieldEarned
+        )
+    {
+        EscrowDetails storage escrow =
+            escrows[_escrowId];
+
+        principal = escrow.amount;
+
+        if (
+            !escrow.yieldActive ||
+            escrow.scaledATokenShares == 0
+        ) {
+            return (
+                principal,
+                principal,
+                0
+            );
+        }
+
+        require(
+            totalScaledATokenShares >=
+                escrow.scaledATokenShares,
+            "Invalid aToken accounting"
+        );
+
+        /*
+         * Current aggregate aToken balance includes accrued yield.
+         */
+        uint256 aggregateATokenBalance =
+            aToken.balanceOf(address(this));
+
+        /*
+         * Calculate this escrow's proportional position.
+         */
+        uint256 escrowValue =
+            (
+                aggregateATokenBalance *
+                escrow.scaledATokenShares
+            ) /
+            totalScaledATokenShares;
+
+        /*
+         * Protect against rounding or unexpected index behavior.
+         */
+        if (escrowValue < principal) {
+            escrowValue = principal;
+        }
+
+        /*
+         * Withdraw exactly this escrow's current Aave value.
+         */
+        uint256 withdrawn =
+            yieldStrategy.withdraw(
+                address(stablecoin),
+                escrowValue,
+                address(this)
+            );
+
+        require(
+            withdrawn >= principal,
+            "Aave returned less than principal"
+        );
+
+        totalReceived = withdrawn;
+
+        yieldEarned =
+            withdrawn - principal;
+
+        /*
+         * Remove accounting shares.
+         */
+        totalScaledATokenShares -=
+            escrow.scaledATokenShares;
+
+        totalYieldPrincipal -= principal;
+
+        escrow.scaledATokenShares = 0;
+        escrow.yieldActive = false;
+    }
+
+    // =============================================================
+    //                         START WORK
+    // =============================================================
+
+    function startWork(
+        uint256 _escrowId
+    )
         external
         onlyClient(_escrowId)
         inState(_escrowId, EscrowState.Funded)
         notPaused
     {
-        escrows[_escrowId].startTime = block.timestamp;
-        escrows[_escrowId].state = EscrowState.InProgress;
-        emit EscrowStarted(_escrowId, block.timestamp);
+        EscrowDetails storage escrow =
+            escrows[_escrowId];
+
+        escrow.startTime =
+            block.timestamp;
+
+        escrow.state =
+            EscrowState.InProgress;
+
+        emit EscrowStarted(
+            _escrowId,
+            block.timestamp
+        );
     }
 
-    // Release payment to freelancer with yield split
-    function releasePayment(uint256 _escrowId)
+    // =============================================================
+    //                     RELEASE PAYMENT
+    // =============================================================
+
+    function releasePayment(
+        uint256 _escrowId
+    )
         external
         onlyClient(_escrowId)
         inState(_escrowId, EscrowState.InProgress)
         nonReentrant
         notPaused
     {
-        EscrowDetails storage escrow = escrows[_escrowId];
+        EscrowDetails storage escrow =
+            escrows[_escrowId];
 
-        uint256 totalReceived = escrow.amount;
-        uint256 yieldEarned = 0;
+        require(
+            block.timestamp >=
+                escrow.startTime +
+                escrow.duration,
+            "Work period not finished"
+        );
 
-        // Withdraw from Aave (withdraw all — use max uint to get principal + yield)
-        if (escrow.yieldActive) {
-            bool withdrawSuccess = _withdrawFromYield(type(uint256).max);
-            if (withdrawSuccess) {
-                uint256 contractBalance = stablecoin.balanceOf(address(this));
-                if (contractBalance > escrow.amount) {
-                    yieldEarned = contractBalance - escrow.amount;
-                }
-                totalReceived = contractBalance;
-            }
+        (
+            uint256 principal,
+            uint256 totalReceived,
+            uint256 yieldEarned
+        ) = _withdrawEscrowFromYield(
+            _escrowId
+        );
+
+        /*
+         * If yield was disabled, totalReceived is principal.
+         */
+        escrow.yieldEarned =
+            yieldEarned;
+
+        /*
+         * 70% -> freelancer
+         * 30% -> client
+         */
+        uint256 freelancerBonus =
+            (yieldEarned * 70) / 100;
+
+        uint256 clientDiscount =
+            yieldEarned -
+            freelancerBonus;
+
+        uint256 freelancerPayment =
+            principal +
+            freelancerBonus;
+
+        require(
+            totalReceived >=
+                freelancerPayment +
+                clientDiscount,
+            "Insufficient escrow value"
+        );
+
+        stablecoin.safeTransfer(
+            escrow.freelancer,
+            freelancerPayment
+        );
+
+        if (clientDiscount > 0) {
+            stablecoin.safeTransfer(
+                escrow.client,
+                clientDiscount
+            );
         }
 
-        escrow.yieldEarned = yieldEarned;
-
-        // Split yield: 70% freelancer bonus, 30% client discount
-        uint256 freelancerBonus = (yieldEarned * 70) / 100;
-        uint256 clientDiscount = yieldEarned - freelancerBonus;
-
-        uint256 freelancerPayment = escrow.amount + freelancerBonus;
-        uint256 clientRefund = clientDiscount;
-
-        // Send payments
-        if (freelancerPayment > 0) {
-            stablecoin.transfer(escrow.freelancer, freelancerPayment);
-        }
-        if (clientRefund > 0) {
-            stablecoin.transfer(escrow.client, clientRefund);
-        }
-
-        uint256 escrowAmount = escrow.amount;
         escrow.amount = 0;
-        escrow.state = EscrowState.Released;
 
-        emit EscrowReleased(_escrowId, escrow.freelancer, escrowAmount, freelancerBonus);
+        escrow.state =
+            EscrowState.Released;
+
+        emit EscrowReleased(
+            _escrowId,
+            escrow.freelancer,
+            principal,
+            freelancerBonus
+        );
     }
 
-    // Refund client with yield compensation
-    function refundClient(uint256 _escrowId)
+    // =============================================================
+    //                       REFUND CLIENT
+    // =============================================================
+
+    function refundClient(
+        uint256 _escrowId
+    )
         external
         onlyClient(_escrowId)
         inState(_escrowId, EscrowState.InProgress)
         nonReentrant
         notPaused
     {
-        EscrowDetails storage escrow = escrows[_escrowId];
+        (
+            uint256 principal,
+            uint256 totalReceived,
+            uint256 yieldEarned
+        ) = _withdrawEscrowFromYield(
+            _escrowId
+        );
 
-        uint256 totalRefund = escrow.amount;
-        uint256 yieldEarned = 0;
+        require(
+            totalReceived >= principal,
+            "Insufficient refund"
+        );
 
-        // Withdraw from Aave
-        if (escrow.yieldActive) {
-            bool withdrawSuccess = _withdrawFromYield(type(uint256).max);
-            if (withdrawSuccess) {
-                uint256 contractBalance = stablecoin.balanceOf(address(this));
-                if (contractBalance > escrow.amount) {
-                    yieldEarned = contractBalance - escrow.amount;
-                }
-                totalRefund = contractBalance;
-            }
-        }
+        escrows[_escrowId].yieldEarned =
+            yieldEarned;
 
-        escrow.yieldEarned = yieldEarned;
+        /*
+         * Client receives principal + all yield on refund.
+         */
+        stablecoin.safeTransfer(
+            escrows[_escrowId].client,
+            totalReceived
+        );
 
-        // Send refund to client
-        if (totalRefund > 0) {
-            stablecoin.transfer(escrow.client, totalRefund);
-        }
+        escrows[_escrowId].amount = 0;
 
-        uint256 escrowAmount = escrow.amount;
-        escrow.amount = 0;
-        escrow.state = EscrowState.Refunded;
+        escrows[_escrowId].state =
+            EscrowState.Refunded;
 
-        emit EscrowRefunded(_escrowId, escrow.client, escrowAmount, yieldEarned);
+        emit EscrowRefunded(
+            _escrowId,
+            escrows[_escrowId].client,
+            principal,
+            yieldEarned
+        );
     }
 
-    // Raise dispute (both parties must agree)
-    function raiseDispute(uint256 _escrowId)
+    // =============================================================
+    //                       RAISE DISPUTE
+    // =============================================================
+
+    function raiseDispute(
+        uint256 _escrowId
+    )
         external
         inState(_escrowId, EscrowState.InProgress)
         notPaused
     {
-        EscrowDetails storage escrow = escrows[_escrowId];
-        require(msg.sender == escrow.client || msg.sender == escrow.freelancer, "Not involved");
+        EscrowDetails storage escrow =
+            escrows[_escrowId];
+
+        require(
+            msg.sender == escrow.client ||
+            msg.sender == escrow.freelancer,
+            "Not involved"
+        );
 
         if (msg.sender == escrow.client) {
             escrow.clientDisputed = true;
@@ -295,69 +789,170 @@ contract EscrowWithYield is Ownable, ReentrancyGuard {
             escrow.freelancerDisputed = true;
         }
 
-        require(escrow.clientDisputed && escrow.freelancerDisputed, "Both parties must agree");
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT withdraw from Aave here.
+         *
+         * The funds remain earning yield while the arbitrator
+         * decides the dispute.
+         */
+        escrow.state =
+            EscrowState.Disputed;
 
-        escrow.state = EscrowState.Disputed;
-        emit DisputeRaised(_escrowId, msg.sender);
+        emit DisputeRaised(
+            _escrowId,
+            msg.sender
+        );
     }
 
-    // Resolve dispute (arbitrator only)
-    function resolveDispute(uint256 _escrowId, address _winner)
+    // =============================================================
+    //                    RESOLVE DISPUTE
+    // =============================================================
+
+    function resolveDispute(
+        uint256 _escrowId,
+        address _winner
+    )
         external
         onlyArbitrator(_escrowId)
         inState(_escrowId, EscrowState.Disputed)
         nonReentrant
         notPaused
     {
-        EscrowDetails storage escrow = escrows[_escrowId];
-        require(_winner == escrow.client || _winner == escrow.freelancer, "Winner must be client or freelancer");
+        EscrowDetails storage escrow =
+            escrows[_escrowId];
 
-        uint256 totalReceived = escrow.amount;
-        uint256 yieldEarned = 0;
+        require(
+            _winner == escrow.client ||
+            _winner == escrow.freelancer,
+            "Winner must be client or freelancer"
+        );
 
-        // Withdraw from Aave
-        if (escrow.yieldActive) {
-            bool withdrawSuccess = _withdrawFromYield(type(uint256).max);
-            if (withdrawSuccess) {
-                uint256 contractBalance = stablecoin.balanceOf(address(this));
-                if (contractBalance > escrow.amount) {
-                    yieldEarned = contractBalance - escrow.amount;
-                }
-                totalReceived = contractBalance;
-            }
-        }
+        (
+            uint256 principal,
+            uint256 totalReceived,
+            uint256 yieldEarned
+        ) = _withdrawEscrowFromYield(
+            _escrowId
+        );
 
-        escrow.yieldEarned = yieldEarned;
+        escrow.yieldEarned =
+            yieldEarned;
 
-        // Arbitrator gets 10% of yield as fee
-        uint256 arbitratorFee = (yieldEarned * 10) / 100;
-        uint256 amountToWinner = escrow.amount + (yieldEarned - arbitratorFee);
+        /*
+         * Arbitrator receives 10% of yield ONLY.
+         *
+         * Principal is never charged.
+         */
+        uint256 arbitratorFee =
+            (yieldEarned * 10) / 100;
 
-        stablecoin.transfer(_winner, amountToWinner);
+        uint256 winnerYield =
+            yieldEarned -
+            arbitratorFee;
+
+        uint256 winnerAmount =
+            principal +
+            winnerYield;
+
+        require(
+            totalReceived >=
+                winnerAmount +
+                arbitratorFee,
+            "Insufficient dispute value"
+        );
+
+        stablecoin.safeTransfer(
+            _winner,
+            winnerAmount
+        );
+
         if (arbitratorFee > 0) {
-            stablecoin.transfer(escrow.arbitrator, arbitratorFee);
+            stablecoin.safeTransfer(
+                escrow.arbitrator,
+                arbitratorFee
+            );
         }
 
         escrow.amount = 0;
-        escrow.state = EscrowState.Released;
 
-        emit DisputeResolved(_escrowId, _winner, amountToWinner, arbitratorFee);
+        escrow.state =
+            EscrowState.Released;
+
+        emit DisputeResolved(
+            _escrowId,
+            _winner,
+            winnerAmount,
+            arbitratorFee
+        );
     }
 
-    // Admin: Pause protocol
-    function pause() external onlyOwner {
+    // =============================================================
+    //                           ADMIN
+    // =============================================================
+
+    function pause()
+        external
+        onlyOwner
+    {
         isPaused = true;
-        emit Paused();
+
+        emit Paused(msg.sender);
     }
 
-    // Admin: Unpause protocol
-    function unpause() external onlyOwner {
+    function unpause()
+        external
+        onlyOwner
+    {
         isPaused = false;
-        emit Unpaused();
+
+        emit Unpaused(msg.sender);
     }
 
-    // View: Get escrow details
-    function getEscrow(uint256 _escrowId) external view returns (EscrowDetails memory) {
+    // =============================================================
+    //                           VIEWS
+    // =============================================================
+
+    function getEscrow(
+        uint256 _escrowId
+    )
+        external
+        view
+        returns (EscrowDetails memory)
+    {
         return escrows[_escrowId];
+    }
+
+    function getEscrowCount()
+        external
+        view
+        returns (uint256)
+    {
+        return escrowCounter;
+    }
+
+    function getTotalYieldPrincipal()
+        external
+        view
+        returns (uint256)
+    {
+        return totalYieldPrincipal;
+    }
+
+    function getTotalScaledATokenShares()
+        external
+        view
+        returns (uint256)
+    {
+        return totalScaledATokenShares;
+    }
+
+    function getATokenBalance()
+        external
+        view
+        returns (uint256)
+    {
+        return aToken.balanceOf(address(this));
     }
 }
