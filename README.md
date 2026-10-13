@@ -25,6 +25,8 @@ Traditional freelance escrow locks client deposits for weeks or months earning n
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
 - [Full Lifecycle Walkthrough](#-full-lifecycle-walkthrough)
+- [Dispute Resolution — Real On-Chain Proof](#-dispute-resolution--real-on-chain-proof)
+- [On-Chain Transaction Reference](#-on-chain-transaction-reference)
 - [Testing](#-testing)
 - [Security](#-security)
 - [Roadmap](#-roadmap)
@@ -142,21 +144,6 @@ Traditional freelance platforms lock client deposits without generating any valu
 - ✅ [BaseScan](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6#code)
 - ✅ [Blockscout](https://base-sepolia.blockscout.com/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6#code)
 - ✅ [Sourcify](https://sourcify.dev/server/repo-ui/84532/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6)
-
-### Live On-Chain State
-
-```
-Total escrows: 1
-
-Escrow #0:
-  Client:        0x98B7a3b289a20E5Fb382e309E830DB6DFa7D530E
-  Freelancer:    0x1B9c6612F602AF4221295c0C085a676B74597746
-  Arbitrator:    0x98B7a3b289a20E5Fb382e309E830DB6DFa7D530E
-  Amount:        10 USDC
-  State:         1 (Funded)
-  Yield Active:  true ✅
-  Yield Earned:  0 USDC (accruing)
-```
 
 ---
 
@@ -314,6 +301,7 @@ freelance-escrow/
 │   ├── check-escrow.ts
 │   ├── check-escrow-config.ts
 │   ├── create-escrow.ts
+│   ├── find-resolves.ts
 │   ├── fund-escrow.ts
 │   ├── get-ausdc.ts
 │   ├── release-payment.ts
@@ -483,7 +471,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## 🔄 Full Lifecycle Walkthrough
 
-Here's the complete flow with **real transaction hashes** from Base Sepolia.
+The complete flow has been tested end-to-end on Base Sepolia. Here's how it works.
 
 ### Step 1: Deploy the Contract
 
@@ -493,86 +481,141 @@ pnpm hardhat ignition deploy ignition/modules/EscrowBase.ts --network baseSepoli
 
 **Deployed at:** `0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`
 
-### Step 2: Approve USDC
+### Step 2: Create Escrow
 
-```bash
-pnpm hardhat run scripts/approve-usdc.ts --network baseSepolia
-```
+The client calls `createEscrow(freelancer, arbitrator, duration)`.
 
-**Transaction:** [`0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787`](https://sepolia.basescan.org/tx/0x43451a641a108ad311e8d7a81e902e36de08b75b1c32ce48d7dd3b6268485787)
+**State:** `Created`
 
-### Step 3: Create Escrow
+### Step 3: Fund Escrow
 
-```bash
-pnpm hardhat run scripts/create-escrow.ts --network baseSepolia
-```
+The client approves USDC, then calls `fundEscrow(escrowId, amount)`.
 
-**Transaction:** [`0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150`](https://sepolia.basescan.org/tx/0xb89f6753bbd92fb8ca23a88d443f6839e2d6652dfa6d6080e2175a1d5f243150)
+**What happens:**
 
-| Field      | Value                                        |
-| ---------- | -------------------------------------------- |
-| Client     | `0x98b7a3b289a20e5fb382e309e830db6dfa7d530e` |
-| Freelancer | `0x1B9c6612F602AF4221295c0C085a676B74597746` |
-| Arbitrator | `0x98b7a3b289a20e5fb382e309e830db6dfa7d530e` |
-| Duration   | 7 days                                       |
+1. USDC transferred from client → escrow contract
+2. Escrow approves Aave to spend USDC
+3. Escrow calls `AavePool.supply()` → aTokens minted to escrow
+4. Escrow records `scaledATokenShares` for this specific escrow
+5. `totalScaledATokenShares` and `totalYieldPrincipal` updated
 
-### Step 4: Fund Escrow
+**State:** `Funded` with `yieldActive: true` ✅
 
-```bash
-pnpm hardhat run scripts/fund-escrow.ts --network baseSepolia
-```
+### Step 4: Start Work
 
-**Transaction:** [`0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26`](https://sepolia.basescan.org/tx/0xea1514a086cb6e030e583ade0d2c4ba1f8c75c9d4309c9be1de02d40699b9e26)
+The client calls `startWork(escrowId)`. This records `startTime`.
 
-**Result:** USDC supplied to Aave V3, aTokens minted to escrow ✅
+**State:** `InProgress`
 
-### Step 5: Verify On-Chain State
+### Step 5: Yield Accrues
 
-```bash
-pnpm hardhat run scripts/check-escrow.ts --network baseSepolia
-```
+While the escrow is `InProgress`, USDC sits in Aave V3 earning yield. The yield is proportional to:
 
-```
-Escrow #0:
-  Amount:        10 USDC
-  State:         1 (Funded)
-  Yield Active:  true ✅
-```
+- The principal amount
+- The time elapsed
+- The Aave V3 supply APY
 
-### Step 6: Start Work (via Frontend)
+### Step 6: Complete Work (3 paths)
 
-Click **Start Work** in the UI → confirm in MetaMask.
+**Path A — Release Payment**
+Client calls `releasePayment(escrowId)`. Requires duration to have passed.
 
-### Step 7: Wait for Duration
+- Escrow withdraws from Aave
+- Principal + 70% yield → freelancer
+- 30% yield → client
 
-Escrow duration = 7 days. Real time must pass.
+**Path B — Refund**
+Client calls `refundClient(escrowId)`.
 
-### Step 8: Release Payment (via Frontend)
+- Escrow withdraws from Aave
+- Principal + 100% yield → client
 
-After 7 days, click **Release Payment**. Yield is split:
+**Path C — Dispute**
+Either party calls `raiseDispute(escrowId)`.
 
-- **Freelancer:** principal + 70% of yield
-- **Client:** 30% of yield
+- Funds **stay in Aave** (still earning yield)
+- Arbitrator calls `resolveDispute(escrowId, winner)`
+- Principal + 90% yield → winner
+- 10% yield → arbitrator
 
-### Step 9: Verify Yield Split
+---
 
-```bash
-pnpm hardhat run scripts/check-balances.ts --network baseSepolia
-```
+## ⚖️ Dispute Resolution — Real On-Chain Proof
 
-**Before:**
+The dispute flow has been executed end-to-end on Base Sepolia with both outcomes verified.
 
-```
-Client:     30.00 USDC
-Freelancer: 30.00 USDC
-```
+### Case 1: Freelancer Wins (Escrow #2)
 
-**After 7 days at 107% APY (testnet):**
+| Field                | Value                                                     |
+| -------------------- | --------------------------------------------------------- |
+| Escrow               | #2 (10 USDC principal)                                    |
+| Winner               | `0x1B9c6612F602AF4221295c0C085a676B74597746` (freelancer) |
+| Winner received      | **10.00001 USDC** (principal + 90% of yield)              |
+| Arbitrator fee       | **0.000001 USDC** (10% of yield)                          |
+| Principal preserved  | ✅ 10 USDC returned to winner                             |
+| Yield from principal | ❌ Never charged                                          |
 
-```
-Client:     30.06 USDC (+0.06 = 30% of yield)
-Freelancer: 40.14 USDC (+10.14 = 10 + 70% of yield)
-```
+**Transactions:**
+
+- **Raise dispute:** [`0xcd4bef824e1e65cf7f90518c250aabfd503b9a817f5b32069ca347b8a085fbcc`](https://sepolia.basescan.org/tx/0xcd4bef824e1e65cf7f90518c250aabfd503b9a817f5b32069ca347b8a085fbcc)
+- **Resolve for freelancer:** [`0x9d12d176382453b5728ced4751bf820e4534bc22e8c72ee4d6e8e129bd5515af`](https://sepolia.basescan.org/tx/0x9d12d176382453b5728ced4751bf820e4534bc22e8c72ee4d6e8e129bd5515af)
+
+### Case 2: Client Wins (Escrow #3)
+
+| Field                | Value                                                 |
+| -------------------- | ----------------------------------------------------- |
+| Escrow               | #3 (10 USDC principal)                                |
+| Winner               | `0x98B7a3b289a20E5Fb382e309E830DB6DFa7D530E` (client) |
+| Winner received      | **10.000007 USDC** (principal + 90% of yield)         |
+| Arbitrator fee       | **0 USDC** (10% of 0.000007 rounds to 0)              |
+| Principal preserved  | ✅ 10 USDC returned to winner                         |
+| Yield from principal | ❌ Never charged                                      |
+
+**Transactions:**
+
+- **Raise dispute:** [`0x23ee3d44234da7d20d698e904a03ee2a2dcdcdbfe3b6db79bcd3ae0538404a07`](https://sepolia.basescan.org/tx/0x23ee3d44234da7d20d698e904a03ee2a2dcdcdbfe3b6db79bcd3ae0538404a07)
+- **Resolve for client:** [`0xed597ebbea32aaf393d16c06f0935aa9df14729ce6e8c96609a9d5a745978098`](https://sepolia.basescan.org/tx/0xed597ebbea32aaf393d16c06f0935aa9df14729ce6e8c96609a9d5a745978098)
+
+### Key Guarantees Verified
+
+| Guarantee                          | Verified By                                     |
+| ---------------------------------- | ----------------------------------------------- |
+| Freelancer can win disputes        | Escrow #2 resolution                            |
+| Client can win disputes            | Escrow #3 resolution                            |
+| Arbitrator never charges principal | Both cases — fee was 10% of yield only          |
+| Principal fully preserved          | Winner received ≥ 10 USDC in both cases         |
+| Rounding to zero is safe           | Escrow #3 fee rounded to 0, no funds stuck      |
+| Both parties can trigger disputes  | `raiseDispute` callable by client or freelancer |
+
+---
+
+## 📜 On-Chain Transaction Reference
+
+All operations verified on Base Sepolia. Each hash links to BaseScan.
+
+### Deployment
+
+| Operation         | Transaction                                                                                                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contract creation | [`0x76b9e2c5344a4ee927b7653d8f4d39fa3cbbd5c340b39d83569b44882320f171`](https://sepolia.basescan.org/tx/0x76b9e2c5344a4ee927b7653d8f4d39fa3cbbd5c340b39d83569b44882320f171) |
+
+### Dispute Lifecycle
+
+| Operation             | Escrow | Transaction                                                                                                                                                                |
+| --------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dispute raised        | #2     | [`0xcd4bef824e1e65cf7f90518c250aabfd503b9a817f5b32069ca347b8a085fbcc`](https://sepolia.basescan.org/tx/0xcd4bef824e1e65cf7f90518c250aabfd503b9a817f5b32069ca347b8a085fbcc) |
+| Resolved (freelancer) | #2     | [`0x9d12d176382453b5728ced4751bf820e4534bc22e8c72ee4d6e8e129bd5515af`](https://sepolia.basescan.org/tx/0x9d12d176382453b5728ced4751bf820e4534bc22e8c72ee4d6e8e129bd5515af) |
+| Dispute raised        | #3     | [`0x23ee3d44234da7d20d698e904a03ee2a2dcdcdbfe3b6db79bcd3ae0538404a07`](https://sepolia.basescan.org/tx/0x23ee3d44234da7d20d698e904a03ee2a2dcdcdbfe3b6db79bcd3ae0538404a07) |
+| Resolved (client)     | #3     | [`0xed597ebbea32aaf393d16c06f0935aa9df14729ce6e8c96609a9d5a745978098`](https://sepolia.basescan.org/tx/0xed597ebbea32aaf393d16c06f0935aa9df14729ce6e8c96609a9d5a745978098) |
+
+### Deployed Contracts
+
+| Contract        | Address                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| EscrowWithYield | [`0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6) |
+| Aave V3 Pool    | [`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`](https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b) |
+| aUSDC           | [`0xf53B60F4006cab2b3C4688ce41fD5362427A2A66`](https://sepolia.basescan.org/address/0xf53B60F4006cab2b3C4688ce41fD5362427A2A66) |
+| USDC            | [`0x036CbD53842c5426634e7929541eC2318f3dCF7e`](https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e) |
 
 ---
 
@@ -686,6 +729,7 @@ Running node:test tests
 - [x] Triple-verified on explorers
 - [x] Full lifecycle tested
 - [x] Real yield accrual confirmed
+- [x] Dispute resolution tested with real proof
 
 ### Phase 2: Frontend ✅ Complete
 
@@ -695,6 +739,7 @@ Running node:test tests
 - [x] Fund escrow with approval flow
 - [x] Escrow cards with real-time state
 - [x] Yield display
+- [x] Dispute resolution buttons (both outcomes)
 
 ### Phase 3: Polish 🚧 In Progress
 
