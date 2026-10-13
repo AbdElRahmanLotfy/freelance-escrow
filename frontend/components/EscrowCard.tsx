@@ -50,6 +50,7 @@ export default function EscrowCard({
 
   const isClient = address?.toLowerCase() === client.toLowerCase();
   const isFreelancer = address?.toLowerCase() === freelancer.toLowerCase();
+  const isArbitrator = address?.toLowerCase() === arbitrator.toLowerCase();
 
   // Fetch allowance & balance when the state is "Created"
   useEffect(() => {
@@ -122,7 +123,6 @@ export default function EscrowCard({
       setLoading(false);
     }
   }
-
   async function executeAction(action: string) {
     if (!walletProvider) return;
 
@@ -145,6 +145,14 @@ export default function EscrowCard({
         case "dispute":
           tx = await escrow.raiseDispute(id);
           break;
+        case "resolveDisputeForFreelancer":
+          tx = await escrow.resolveDispute(id, freelancer);
+          break;
+        case "resolveDisputeForClient":
+          tx = await escrow.resolveDispute(id, client);
+          break;
+        default:
+          throw new Error(`Unknown action: ${action}`);
       }
 
       if (tx) {
@@ -168,6 +176,8 @@ export default function EscrowCard({
   const canRefund = isClient && state === EscrowState.InProgress;
   const canDispute =
     (isClient || isFreelancer) && state === EscrowState.InProgress;
+
+  const canResolve = isArbitrator && state === EscrowState.Disputed;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
@@ -303,6 +313,24 @@ export default function EscrowCard({
           >
             {loading ? "..." : "Raise Dispute"}
           </button>
+        )}
+        {canResolve && (
+          <>
+            <button
+              onClick={() => executeAction("resolveDisputeForFreelancer")}
+              disabled={loading}
+              className="px-4 py-2 bg-green-700 text-white text-sm rounded-lg hover:bg-green-800 transition disabled:opacity-50"
+            >
+              {loading ? "..." : "Resolve for Freelancer"}
+            </button>
+            <button
+              onClick={() => executeAction("resolveDisputeForClient")}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
+            >
+              {loading ? "..." : "Resolve for Client"}
+            </button>
+          </>
         )}
       </div>
     </div>
