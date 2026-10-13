@@ -5,9 +5,10 @@ import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { Contract } from "ethers";
 import { getBrowserProvider } from "@/lib/contract";
 
-import { ESCROW_ADDRESS } from "@/lib/constants";
+import { ESCROW_ADDRESS, EscrowState } from "@/lib/constants";
 import EscrowABI from "@/abi/EscrowWithYield.json";
 import EscrowCard from "./EscrowCard";
+import EscrowSkeleton from "./EscrowSkeleton";
 
 interface EscrowData {
   id: number;
@@ -25,6 +26,8 @@ export default function EscrowList() {
   const { walletProvider } = useAppKitProvider("eip155");
   const [escrows, setEscrows] = useState<EscrowData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [sort, setSort] = useState<"newest" | "oldest" | "amount">("newest");
 
   const fetchEscrows = useCallback(async () => {
     if (!isConnected || !walletProvider || !address) return;
@@ -32,7 +35,6 @@ export default function EscrowList() {
     try {
       setLoading(true);
       const provider = getBrowserProvider(walletProvider);
-
       const escrow = new Contract(ESCROW_ADDRESS, EscrowABI.abi, provider);
 
       const counter = await escrow.escrowCounter();
@@ -70,6 +72,12 @@ export default function EscrowList() {
 
   useEffect(() => {
     fetchEscrows();
+
+    const interval = setInterval(() => {
+      fetchEscrows();
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, [fetchEscrows]);
 
   if (!isConnected) {
@@ -80,27 +88,123 @@ export default function EscrowList() {
     );
   }
 
-  if (loading) {
+  if (loading && escrows.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
-        Loading escrows...
+      <div className="grid gap-4 md:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <EscrowSkeleton key={i} />
+        ))}
       </div>
     );
   }
 
-  if (escrows.length === 0) {
+  // ─────────────────────────────────────────────────
+  //  FILTER + SORT LOGIC (the missing piece)
+  // ─────────────────────────────────────────────────
+
+  const processedEscrows = escrows
+    .filter((e) => {
+      if (filter === "active") {
+        return [
+          EscrowState.Funded,
+          EscrowState.InProgress,
+          EscrowState.Disputed,
+        ].includes(e.state);
+      }
+      if (filter === "completed") {
+        return [EscrowState.Released, EscrowState.Refunded].includes(e.state);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === "newest") return b.id - a.id;
+      if (sort === "oldest") return a.id - b.id;
+      if (sort === "amount") return Number(b.amount - a.amount);
+      return 0;
+    });
+
+  if (processedEscrows.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
-        No escrows found. Create your first escrow above!
+      <div className="bg-white rounded-xl shadow-md p-12 text-center">
+        <div className="text-6xl mb-4">🏗️</div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {escrows.length === 0 ? "No escrows yet" : `No ${filter} escrows`}
+        </h3>
+        <p className="text-gray-500 mb-6">
+          {escrows.length === 0
+            ? "Create your first escrow to start earning yield on locked funds."
+            : "Try switching to a different filter."}
+        </p>
+        {escrows.length === 0 ? (
+          <a
+            href="#create"
+            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Create Escrow
+          </a>
+        ) : (
+          <button
+            onClick={() => setFilter("all")}
+            className="inline-block px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+          >
+            Show All
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {escrows.map((escrow) => (
-        <EscrowCard key={escrow.id} {...escrow} onRefresh={fetchEscrows} />
-      ))}
-    </div>
+    <>
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-3 py-1 text-sm rounded-lg transition ${
+              filter === "all"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            All ({escrows.length})
+          </button>
+          <button
+            onClick={() => setFilter("active")}
+            className={`px-3 py-1 text-sm rounded-lg transition ${
+              filter === "active"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setFilter("completed")}
+            className={`px-3 py-1 text-sm rounded-lg transition ${
+              filter === "completed"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Completed
+          </button>
+        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="amount">Highest amount</option>
+        </select>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {processedEscrows.map((escrow) => (
+          <EscrowCard key={escrow.id} {...escrow} onRefresh={fetchEscrows} />
+        ))}
+      </div>
+    </>
   );
 }

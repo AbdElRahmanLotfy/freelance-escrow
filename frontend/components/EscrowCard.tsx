@@ -11,6 +11,7 @@ import {
   ESCROW_STATE_COLORS,
 } from "@/lib/constants";
 import EscrowABI from "@/abi/EscrowWithYield.json";
+import toast from "react-hot-toast";
 
 const ERC20_ABI = [
   "function allowance(address owner, address spender) view returns (uint256)",
@@ -98,7 +99,7 @@ export default function EscrowCard({
       setAllowance(newAllowance);
     } catch (error: any) {
       console.error(error);
-      alert(error.reason || error.message || "Approval failed");
+      toast.error(error.reason || error.message || "Approval failed");
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export default function EscrowCard({
       onRefresh();
     } catch (error: any) {
       console.error(error);
-      alert(error.reason || error.message || "Fund failed");
+      toast.error(error.reason || error.message || "Fund failed");
     } finally {
       setLoading(false);
     }
@@ -154,14 +155,16 @@ export default function EscrowCard({
         default:
           throw new Error(`Unknown action: ${action}`);
       }
-
       if (tx) {
+        const toastId = toast.loading("Confirming transaction...");
         await tx.wait();
+        toast.success(`${action} successful!`, { id: toastId });
         onRefresh();
       }
     } catch (error: any) {
       console.error(error);
-      alert(error.reason || error.message || "Transaction failed");
+
+      toast.error(error.reason || error.message || "Transaction failed");
     } finally {
       setLoading(false);
     }
