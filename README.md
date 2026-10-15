@@ -374,8 +374,9 @@ Edit `.env`:
 
 ```env
 # RPC URLs
-SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
-BASE_SEPOLIA_RPC_URL=https://base-sepolia.infura.io/v3/YOUR_KEY
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY
+BASE_SEPOLIA_RPC_URL=https://base-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY
+ARBITRUM_SEPOLIA_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY
 
 # Wallet
 SEPOLIA_PRIVATE_KEY=0xyour_private_key

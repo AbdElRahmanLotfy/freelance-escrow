@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
-import { BrowserProvider, Contract, MaxUint256 } from "ethers";
+import { Contract, MaxUint256 } from "ethers";
+import toast from "react-hot-toast";
+import { getBrowserProvider } from "@/lib/contract";
+
 import { ESCROW_ADDRESS, USDC_ADDRESS } from "@/lib/constants";
 import { formatUSDC, shortenAddress } from "@/lib/format";
 import {
@@ -11,7 +14,7 @@ import {
   ESCROW_STATE_COLORS,
 } from "@/lib/constants";
 import EscrowABI from "@/abi/EscrowWithYield.json";
-import toast from "react-hot-toast";
+import AddressDisplay from "./AddressDisplay";
 
 const ERC20_ABI = [
   "function allowance(address owner, address spender) view returns (uint256)",
@@ -45,6 +48,7 @@ export default function EscrowCard({
   const { address } = useAppKitAccount();
   const { walletProvider } = useAppKitProvider("eip155");
   const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [fundAmount, setFundAmount] = useState("10");
   const [allowance, setAllowance] = useState<bigint>(0n);
   const [usdcBalance, setUsdcBalance] = useState<bigint>(0n);
@@ -59,7 +63,7 @@ export default function EscrowCard({
       if (!walletProvider || !address || state !== EscrowState.Created) return;
 
       try {
-        const provider = new BrowserProvider(walletProvider as any);
+        const provider = getBrowserProvider(walletProvider);
         const usdc = new Contract(USDC_ADDRESS, ERC20_ABI, provider);
 
         const [allow, bal] = await Promise.all([
@@ -79,36 +83,53 @@ export default function EscrowCard({
 
   async function getSigner() {
     if (!walletProvider) throw new Error("Wallet not connected");
-    const provider = new BrowserProvider(walletProvider as any);
+    const provider = getBrowserProvider(walletProvider);
     return await provider.getSigner();
   }
 
+  // ─────────────────────────────────────────────
+  //  APPROVE USDC
+  // ─────────────────────────────────────────────
+
   async function handleApprove() {
     if (!walletProvider) return;
+    const toastId = toast.loading("Approving USDC...");
+
     try {
       setLoading(true);
+      setLoadingAction("approve");
       const signer = await getSigner();
       const usdc = new Contract(USDC_ADDRESS, ERC20_ABI, signer);
 
-      // Approve max to avoid re-approving every time
       const tx = await usdc.approve(ESCROW_ADDRESS, MaxUint256);
       await tx.wait();
 
-      // Refresh allowance
       const newAllowance = await usdc.allowance(address, ESCROW_ADDRESS);
       setAllowance(newAllowance);
+
+      toast.success("USDC approved!", { id: toastId });
     } catch (error: any) {
       console.error(error);
-      toast.error(error.reason || error.message || "Approval failed");
+      toast.error(error.reason || error.message || "Approval failed", {
+        id: toastId,
+      });
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
+  // ─────────────────────────────────────────────
+  //  FUND ESCROW
+  // ─────────────────────────────────────────────
+
   async function handleFund() {
     if (!walletProvider) return;
+    const toastId = toast.loading("Funding escrow...");
+
     try {
       setLoading(true);
+      setLoadingAction("fund");
       const signer = await getSigner();
       const escrow = new Contract(ESCROW_ADDRESS, EscrowABI.abi, signer);
 
@@ -116,61 +137,86 @@ export default function EscrowCard({
 
       const tx = await escrow.fundEscrow(id, amountWei);
       await tx.wait();
+
+      toast.success(`${fundAmount} USDC funded!`, { id: toastId });
       onRefresh();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.reason || error.message || "Fund failed");
+      toast.error(error.reason || error.message || "Fund failed", {
+        id: toastId,
+      });
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
+
+  // ─────────────────────────────────────────────
+  //  GENERIC ACTION HANDLER
+  // ─────────────────────────────────────────────
+
   async function executeAction(action: string) {
     if (!walletProvider) return;
+    const toastId = toast.loading("Processing transaction...");
 
     try {
       setLoading(true);
+      setLoadingAction(action);
       const signer = await getSigner();
       const escrow = new Contract(ESCROW_ADDRESS, EscrowABI.abi, signer);
 
       let tx;
+      let successMessage = "Transaction successful!";
+
       switch (action) {
         case "startWork":
           tx = await escrow.startWork(id);
+          successMessage = "Work started!";
           break;
         case "release":
           tx = await escrow.releasePayment(id);
+          successMessage = "Payment released!";
           break;
         case "refund":
           tx = await escrow.refundClient(id);
+          successMessage = "Client refunded!";
           break;
         case "dispute":
           tx = await escrow.raiseDispute(id);
+          successMessage = "Dispute raised!";
           break;
         case "resolveDisputeForFreelancer":
           tx = await escrow.resolveDispute(id, freelancer);
+          successMessage = "Dispute resolved for freelancer!";
           break;
         case "resolveDisputeForClient":
           tx = await escrow.resolveDispute(id, client);
+          successMessage = "Dispute resolved for client!";
           break;
         default:
           throw new Error(`Unknown action: ${action}`);
       }
+
       if (tx) {
-        const toastId = toast.loading("Confirming transaction...");
         await tx.wait();
-        toast.success(`${action} successful!`, { id: toastId });
+        toast.success(successMessage, { id: toastId });
         onRefresh();
       }
     } catch (error: any) {
       console.error(error);
-
-      toast.error(error.reason || error.message || "Transaction failed");
+      toast.error(error.reason || error.message || "Transaction failed", {
+        id: toastId,
+      });
     } finally {
       setLoading(false);
+      setLoadingAction(null);
     }
   }
 
-  // Action availability
+  // ─────────────────────────────────────────────
+  //  ACTION AVAILABILITY
+  // ─────────────────────────────────────────────
+
   const canFund = isClient && state === EscrowState.Created;
   const hasEnoughAllowance =
     allowance >= BigInt(Math.floor(parseFloat(fundAmount || "0") * 10 ** 6));
@@ -179,15 +225,18 @@ export default function EscrowCard({
   const canRefund = isClient && state === EscrowState.InProgress;
   const canDispute =
     (isClient || isFreelancer) && state === EscrowState.InProgress;
-
   const canResolve = isArbitrator && state === EscrowState.Disputed;
 
+  // ─────────────────────────────────────────────
+  //  RENDER
+  // ─────────────────────────────────────────────
+
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-md p-6 hover:shadow-lg transition">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Escrow #{id}</h3>
+          <h3 className="text-lg font-semibold text-white">Escrow #{id}</h3>
           <span
             className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium ${
               ESCROW_STATE_COLORS[state as EscrowState]
@@ -197,32 +246,24 @@ export default function EscrowCard({
           </span>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-black">{formatUSDC(amount)}</p>
-          <p className="text-xs text-black font-medium">USDC</p>
+          <p className="text-2xl font-bold text-white">{formatUSDC(amount)}</p>
+          <p className="text-xs text-gray-400">USDC</p>
         </div>
       </div>
 
       {/* Details */}
       <div className="space-y-1 mb-4 text-sm">
         <p>
-          <span className="text-gray-500">Client:</span>{" "}
-          <span className="font-mono text-black">
-            {shortenAddress(client)}
-            {isClient && <span className="ml-2 text-blue-600">(you)</span>}
-          </span>
+          <span className="text-gray-400">Client:</span>{" "}
+          <AddressDisplay address={client} isYou={isClient} />
         </p>
         <p>
-          <span className="text-gray-500">Freelancer:</span>{" "}
-          <span className="font-mono text-black">
-            {shortenAddress(freelancer)}
-            {isFreelancer && <span className="ml-2 text-blue-600">(you)</span>}
-          </span>
+          <span className="text-gray-400">Freelancer:</span>{" "}
+          <AddressDisplay address={freelancer} isYou={isFreelancer} />
         </p>
         <p>
-          <span className="text-gray-500">Arbitrator:</span>{" "}
-          <span className="font-mono text-black">
-            {shortenAddress(arbitrator)}
-          </span>
+          <span className="text-gray-400">Arbitrator:</span>{" "}
+          <AddressDisplay address={arbitrator} isYou={isArbitrator} />
         </p>
       </div>
 
@@ -251,10 +292,10 @@ export default function EscrowCard({
               step="0.000001"
               value={fundAmount}
               onChange={(e) => setFundAmount(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 text-black rounded-lg text-sm focus:ring-0 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-0  focus:border-0"
               disabled={loading}
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               Balance: {formatUSDC(usdcBalance)} USDC
             </p>
           </div>
@@ -263,58 +304,77 @@ export default function EscrowCard({
             <button
               onClick={handleApprove}
               disabled={loading}
-              className="w-full py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition disabled:opacity-50"
+              className="w-full py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? "Approving..." : `Approve ${fundAmount} USDC`}
+              {loadingAction === "approve" ? (
+                <>
+                  <Spinner />
+                  Approving...
+                </>
+              ) : (
+                `Approve ${fundAmount} USDC`
+              )}
             </button>
           ) : (
             <button
               onClick={handleFund}
               disabled={loading}
-              className="w-full py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? "Funding..." : `Fund with ${fundAmount} USDC`}
+              {loadingAction === "fund" ? (
+                <>
+                  <Spinner />
+                  Funding...
+                </>
+              ) : (
+                `Fund with ${fundAmount} USDC`
+              )}
             </button>
           )}
         </div>
       )}
 
-      {/* Other Actions */}
+      {/* Action Buttons */}
+
       <div className="flex flex-wrap gap-2 mt-4">
         {canStartWork && (
           <button
             onClick={() => executeAction("startWork")}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
           >
-            {loading ? "..." : "Start Work"}
+            {loadingAction === "startWork" && <Spinner />}
+            Start Work
           </button>
         )}
         {canRelease && (
           <button
             onClick={() => executeAction("release")}
             disabled={loading}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+            className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center gap-2"
           >
-            {loading ? "..." : "Release Payment"}
+            {loadingAction === "release" && <Spinner />}
+            Release Payment
           </button>
         )}
         {canRefund && (
           <button
             onClick={() => executeAction("refund")}
             disabled={loading}
-            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition disabled:opacity-50 flex items-center gap-2"
           >
-            {loading ? "..." : "Refund"}
+            {loadingAction === "refund" && <Spinner />}
+            Refund
           </button>
         )}
         {canDispute && (
           <button
             onClick={() => executeAction("dispute")}
             disabled={loading}
-            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+            className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
           >
-            {loading ? "..." : "Raise Dispute"}
+            {loadingAction === "dispute" && <Spinner />}
+            Raise Dispute
           </button>
         )}
         {canResolve && (
@@ -322,20 +382,51 @@ export default function EscrowCard({
             <button
               onClick={() => executeAction("resolveDisputeForFreelancer")}
               disabled={loading}
-              className="px-4 py-2 bg-green-700 text-white text-sm rounded-lg hover:bg-green-800 transition disabled:opacity-50"
+              className="px-4 py-2 bg-green-700 text-white text-sm rounded-lg hover:bg-green-800 transition disabled:opacity-50 flex items-center gap-2"
             >
-              {loading ? "..." : "Resolve for Freelancer"}
+              {loadingAction === "resolveDisputeForFreelancer" && <Spinner />}
+              Resolve for Freelancer
             </button>
             <button
               onClick={() => executeAction("resolveDisputeForClient")}
               disabled={loading}
-              className="px-4 py-2 bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-800 transition disabled:opacity-50"
+              className="px-4 py-2 bg-blue-700 text-white text-sm rounded-lg hover:bg-blue-800 transition disabled:opacity-50 flex items-center gap-2"
             >
-              {loading ? "..." : "Resolve for Client"}
+              {loadingAction === "resolveDisputeForClient" && <Spinner />}
+              Resolve for Client
             </button>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+//  SMALL SPINNER COMPONENT
+// ─────────────────────────────────────────────
+
+function Spinner() {
+  return (
+    <svg
+      className="animate-spin h-4 w-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
   );
 }

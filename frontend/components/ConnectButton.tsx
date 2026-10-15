@@ -15,12 +15,12 @@ export default function ConnectButton() {
   if (isConnected && address) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-sm text-black bg-gray-100 px-4 py-2 rounded-lg font-bold">
+        <span className="text-sm bg-gray-800 border border-gray-700 px-4 py-2 rounded-lg font-mono text-gray-200">
           {shortenAddress(address, 4)}
         </span>
         <button
           onClick={() => disconnect()}
-          className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-black-600 transition font-medium"
+          className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition font-medium"
         >
           Disconnect
         </button>

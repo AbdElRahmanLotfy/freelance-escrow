@@ -23,6 +23,11 @@ createAppKit({
     url: "http://localhost:3000",
     icons: ["https://avatars.githubusercontent.com/u/37784886"],
   },
+  themeMode: "dark", // ← ADD THIS
+  themeVariables: {
+    // ← OPTIONAL: customize
+    "--w3m-accent": "#3b82f6",
+  },
   features: {
     analytics: false,
     email: false,

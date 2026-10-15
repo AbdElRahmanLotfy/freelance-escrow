@@ -82,7 +82,7 @@ export default function EscrowList() {
 
   if (!isConnected) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-8 text-center text-gray-400">
         Connect your wallet to view your escrows
       </div>
     );
@@ -125,12 +125,12 @@ export default function EscrowList() {
 
   if (processedEscrows.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-12 text-center">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-12 text-center">
         <div className="text-6xl mb-4">🏗️</div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <h3 className="text-xl font-semibold text-white mb-2">
           {escrows.length === 0 ? "No escrows yet" : `No ${filter} escrows`}
         </h3>
-        <p className="text-gray-500 mb-6">
+        <p className="text-gray-400 mb-6">
           {escrows.length === 0
             ? "Create your first escrow to start earning yield on locked funds."
             : "Try switching to a different filter."}
@@ -163,7 +163,7 @@ export default function EscrowList() {
             className={`px-3 py-1 text-sm rounded-lg transition ${
               filter === "all"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
             }`}
           >
             All ({escrows.length})
@@ -192,7 +192,7 @@ export default function EscrowList() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-3 py-1 text-sm bg-gray-800 border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>

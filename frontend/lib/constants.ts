@@ -25,10 +25,14 @@ export const ESCROW_STATE_LABELS: Record<EscrowState, string> = {
 };
 
 export const ESCROW_STATE_COLORS: Record<EscrowState, string> = {
-  [EscrowState.Created]: "bg-gray-100 text-gray-800",
-  [EscrowState.Funded]: "bg-yellow-100 text-yellow-800",
-  [EscrowState.InProgress]: "bg-blue-100 text-blue-800",
-  [EscrowState.Released]: "bg-green-100 text-green-800",
-  [EscrowState.Refunded]: "bg-purple-100 text-purple-800",
-  [EscrowState.Disputed]: "bg-red-100 text-red-800",
+  [EscrowState.Created]: "bg-gray-800 text-gray-300 border border-gray-700",
+  [EscrowState.Funded]:
+    "bg-yellow-950/50 text-yellow-300 border border-yellow-900/50",
+  [EscrowState.InProgress]:
+    "bg-blue-950/50 text-blue-300 border border-blue-900/50",
+  [EscrowState.Released]:
+    "bg-green-950/50 text-green-300 border border-green-900/50",
+  [EscrowState.Refunded]:
+    "bg-purple-950/50 text-purple-300 border border-purple-900/50",
+  [EscrowState.Disputed]: "bg-red-950/50 text-red-300 border border-red-900/50",
 };

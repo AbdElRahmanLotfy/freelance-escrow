@@ -49,15 +49,15 @@ export default function EscrowStats() {
 
   return (
     <div className="grid grid-cols-2 gap-4 mb-8">
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <p className="text-sm text-gray-500 mb-1">Your USDC Balance</p>
-        <p className="text-2xl font-bold text-gray-900">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-6">
+        <p className="text-sm text-gray-400 mb-1">Your USDC Balance</p>
+        <p className="text-2xl font-bold text-white">
           {loading ? "..." : formatUSDC(usdcBalance)} USDC
         </p>
       </div>
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <p className="text-sm text-gray-500 mb-1">Total Escrows</p>
-        <p className="text-2xl font-bold text-gray-900">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-6">
+        <p className="text-sm text-gray-400 mb-1">Total Escrows</p>
+        <p className="text-2xl font-bold text-white">
           {loading ? "..." : escrowCount.toString()}
         </p>
       </div>
