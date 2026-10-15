@@ -15,6 +15,29 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100">
+      <div className="bg-blue-950/50 border border-blue-900/50 rounded-lg p-4 mb-6">
+        <p className="text-sm text-blue-300">
+          <strong>First time?</strong> Make sure you're on{" "}
+          <strong>Base Sepolia</strong> network in MetaMask. Get free test ETH
+          from{" "}
+          <a
+            href="https://portal.cdp.coinbase.com/entity_4b079a88-e819-5645-b80b-cfa9e1a38a5f/onchain-tools/faucet"
+            className="underline"
+            target="_blank"
+          >
+            Coin Base Faucet
+          </a>{" "}
+          and test USDC from{" "}
+          <a
+            href="https://faucet.circle.com/"
+            className="underline"
+            target="_blank"
+          >
+            Circle Faucet
+          </a>
+          .
+        </p>
+      </div>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
