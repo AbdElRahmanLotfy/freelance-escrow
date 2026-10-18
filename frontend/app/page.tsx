@@ -40,7 +40,7 @@ export default function Home() {
       </div>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 max-md:flex-wrap max-md:gap-5">
           <div>
             <h1 className="text-3xl font-bold text-white">
               🏗️ Freelance Escrow

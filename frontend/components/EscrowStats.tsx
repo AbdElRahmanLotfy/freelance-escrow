@@ -48,7 +48,7 @@ export default function EscrowStats() {
   if (!isConnected) return null;
 
   return (
-    <div className="grid grid-cols-2 gap-4 mb-8">
+    <div className="grid grid-cols-2 max-md:grid-cols-1 gap-4 mb-8">
       <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-6">
         <p className="text-sm text-gray-400 mb-1">Your USDC Balance</p>
         <p className="text-2xl font-bold text-white">

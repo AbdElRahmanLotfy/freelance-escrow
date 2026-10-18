@@ -727,46 +727,64 @@ Running node:test tests
 - [x] Scaled aToken share accounting
 - [x] 21 passing tests
 - [x] Base Sepolia deployment
-- [x] Triple-verified on explorers
+- [x] Triple-verified on explorers (BaseScan, Blockscout, Sourcify)
 - [x] Full lifecycle tested
 - [x] Real yield accrual confirmed
-- [x] Dispute resolution tested with real proof
+- [x] Dispute resolution tested with real on-chain proof
 
 ### Phase 2: Frontend ✅ Complete
 
 - [x] Next.js 16 dashboard
 - [x] Reown AppKit wallet connection
 - [x] Create escrow UI
-- [x] Fund escrow with approval flow
+- [x] Fund escrow with USDC approval flow
 - [x] Escrow cards with real-time state
-- [x] Yield display
+- [x] Yield display with Aave V3 indicator
 - [x] Dispute resolution buttons (both outcomes)
+- [x] Dark mode — full app dark theme
+- [x] Copyable addresses — click-to-copy with toast confirmation
 
-### Phase 3: Polish 🚧 In Progress
+### Phase 3: Polish ✅ Complete
 
-- [ ] Toast notifications (replace alerts)
-- [ ] Auto-refresh after transactions
-- [ ] Real-time yield ticker
-- [ ] Loading skeletons
-- [ ] Mobile responsive design
-- [ ] Multi-escrow dashboard with filters
+- [x] Toast notifications — replaced all `alert()` calls with `react-hot-toast`
+- [x] Auto-refresh — polling every 15s + refresh after transactions
+- [x] Loading skeletons — animated placeholder cards during load
+- [x] Per-action loading states — spinners on approve/fund/release/dispute buttons
+- [x] Multi-escrow dashboard with filters — All / Active / Completed
+- [x] Sort options — Newest, Oldest, Highest amount
+- [x] Empty states — friendly UI when no escrows exist or filter returns nothing
 
-### Phase 4: Production 📦
+### Phase 4: Production 🚀 In Progress
 
+- [x] Frontend deployed to Vercel — live at [freelance-escrow-rose.vercel.app](https://freelance-escrow-rose.vercel.app)
+- [x] Reown domain allowlist configured — production wallet connect working
+- [x] Alchemy RPC — migrated from Infura for multi-chain support
 - [ ] Base Mainnet deployment
 - [ ] Security audit
 - [ ] Gas optimization report
-- [ ] Frontend deployed to Vercel
 
-### Phase 5: Advanced 🚀
+### Phase 5: Advanced 🔮 Planned
 
-- [ ] Kleros arbitration integration
-- [ ] Time-lock auto-release
-- [ ] Reputation system
-- [ ] Multi-token support
-- [ ] DAO governance
+- [ ] Kleros integration — decentralized arbitration
+- [ ] Time-lock auto-release — 14-day fallback if client disappears
+- [ ] Real-time yield ticker — live-updating yield display
+- [ ] Mobile responsive design — optimized for phones/tablets
+- [ ] Multi-token support — ETH, DAI, USDT
+- [ ] Reputation system — track successful completions
+- [ ] Milestone-based payments — release funds in stages
+- [ ] DAO governance — community-driven protocol upgrades
 
 ---
+
+## Key Milestones Achieved
+
+| Milestone                                 | Proof                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Contract deployed to Base Sepolia         | [BaseScan](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6) |
+| 21 tests passing                          | Local test suite                                                                            |
+| First successful fund with Aave V3        | On-chain transaction                                                                        |
+| Dispute resolution tested (both outcomes) | 4 verified transactions                                                                     |
+| **Frontend live on Vercel**               | [freelance-escrow-rose.vercel.app](https://freelance-escrow-rose.vercel.app)                |
 
 ## 📄 License
 
