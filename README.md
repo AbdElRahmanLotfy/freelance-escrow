@@ -9,6 +9,7 @@ Traditional freelance escrow locks client deposits for weeks or months earning n
 [![Base Sepolia](https://img.shields.io/badge/Network-Base%20Sepolia-blue)](https://sepolia.basescan.org/)
 [![Aave V3](https://img.shields.io/badge/Aave-V3-purple)](https://aave.com/)
 [![Tests](https://img.shields.io/badge/Tests-21%20passing-green)]()
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-vercel-black)](https://freelance-escrow-rose.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -43,6 +44,8 @@ Traditional freelance escrow locks client deposits for weeks or months earning n
 2. **Opportunity Cost** — Idle funds earn real yield through Aave V3
 
 Instead of sitting dormant, deposited USDC is automatically supplied to Aave V3. The yield earned is split between freelancer and client when the work is released.
+
+> 🌐 **Live Demo:** [freelance-escrow-rose.vercel.app](https://freelance-escrow-rose.vercel.app)
 
 ### Core Features
 
