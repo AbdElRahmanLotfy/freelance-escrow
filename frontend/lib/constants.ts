@@ -1,6 +1,7 @@
 export const ESCROW_ADDRESS = process.env.NEXT_PUBLIC_ESCROW_ADDRESS as string;
 export const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS as string;
 export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 84532);
+export const AAVE_POOL_ADDRESS = "0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b";
 
 // USDC has 6 decimals
 export const USDC_DECIMALS = 6;

@@ -5,7 +5,12 @@ import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { Contract } from "ethers";
 import { getBrowserProvider } from "@/lib/contract";
 
-import { ESCROW_ADDRESS, EscrowState } from "@/lib/constants";
+import {
+  ESCROW_ADDRESS,
+  EscrowState,
+  USDC_ADDRESS,
+  AAVE_POOL_ADDRESS,
+} from "@/lib/constants";
 import EscrowABI from "@/abi/EscrowWithYield.json";
 import EscrowCard from "./EscrowCard";
 import EscrowSkeleton from "./EscrowSkeleton";
@@ -17,6 +22,7 @@ interface EscrowData {
   arbitrator: string;
   amount: bigint;
   yieldEarned: bigint;
+  duration: bigint;
   state: number;
   yieldActive: boolean;
 }
@@ -26,6 +32,7 @@ export default function EscrowList() {
   const { walletProvider } = useAppKitProvider("eip155");
   const [escrows, setEscrows] = useState<EscrowData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentApyBps, setCurrentApyBps] = useState<number>(0);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [sort, setSort] = useState<"newest" | "oldest" | "amount">("newest");
 
@@ -35,8 +42,27 @@ export default function EscrowList() {
     try {
       setLoading(true);
       const provider = getBrowserProvider(walletProvider);
-      const escrow = new Contract(ESCROW_ADDRESS, EscrowABI.abi, provider);
 
+      // 1. Fetch APY directly from Aave Pool
+      try {
+        const aavePool = new Contract(
+          AAVE_POOL_ADDRESS,
+          [
+            "function getReserveData(address asset) view returns (uint256, uint128, uint128 currentLiquidityRate, uint128, uint128, uint40, uint16, address, address, address, address)",
+          ],
+          provider,
+        );
+        const data = await aavePool.getReserveData(USDC_ADDRESS);
+        // Aave returns APY in Ray (1e27). We divide by 1e25 to get human-readable % (e.g., 500 = 5.00%)
+        const apyPercentage = Number(data[2]) / 1e25;
+        setCurrentApyBps(Math.round(apyPercentage * 100));
+      } catch (err) {
+        console.error("Failed to fetch APY directly from Aave", err);
+        setCurrentApyBps(0);
+      }
+
+      // 2. Fetch Escrows from our contract
+      const escrow = new Contract(ESCROW_ADDRESS, EscrowABI.abi, provider);
       const counter = await escrow.escrowCounter();
       const userEscrows: EscrowData[] = [];
 
@@ -56,6 +82,7 @@ export default function EscrowList() {
             arbitrator: details.arbitrator as string,
             amount: details.amount as bigint,
             yieldEarned: details.yieldEarned as bigint,
+            duration: details.duration as bigint, // <-- Added
             state: Number(details.state),
             yieldActive: details.yieldActive as boolean,
           });
@@ -97,10 +124,6 @@ export default function EscrowList() {
       </div>
     );
   }
-
-  // ─────────────────────────────────────────────────
-  //  FILTER + SORT LOGIC (the missing piece)
-  // ─────────────────────────────────────────────────
 
   const processedEscrows = escrows
     .filter((e) => {
@@ -145,7 +168,7 @@ export default function EscrowList() {
         ) : (
           <button
             onClick={() => setFilter("all")}
-            className="inline-block px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+            className="inline-block px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
           >
             Show All
           </button>
@@ -173,7 +196,7 @@ export default function EscrowList() {
             className={`px-3 py-1 text-sm rounded-lg transition ${
               filter === "active"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
             }`}
           >
             Active
@@ -183,7 +206,7 @@ export default function EscrowList() {
             className={`px-3 py-1 text-sm rounded-lg transition ${
               filter === "completed"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
             }`}
           >
             Completed
@@ -202,7 +225,12 @@ export default function EscrowList() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {processedEscrows.map((escrow) => (
-          <EscrowCard key={escrow.id} {...escrow} onRefresh={fetchEscrows} />
+          <EscrowCard
+            key={escrow.id}
+            {...escrow}
+            apyBps={currentApyBps}
+            onRefresh={fetchEscrows}
+          />
         ))}
       </div>
     </>

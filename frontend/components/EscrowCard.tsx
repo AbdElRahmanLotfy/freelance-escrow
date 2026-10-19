@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { getBrowserProvider } from "@/lib/contract";
 
 import { ESCROW_ADDRESS, USDC_ADDRESS } from "@/lib/constants";
-import { formatUSDC, shortenAddress } from "@/lib/format";
+import { formatUSDC } from "@/lib/format";
 import {
   EscrowState,
   ESCROW_STATE_LABELS,
@@ -29,8 +29,10 @@ interface EscrowCardProps {
   arbitrator: string;
   amount: bigint;
   yieldEarned: bigint;
+  duration: bigint; // Added
   state: number;
   yieldActive: boolean;
+  apyBps: number; // Added
   onRefresh: () => void;
 }
 
@@ -41,8 +43,10 @@ export default function EscrowCard({
   arbitrator,
   amount,
   yieldEarned,
+  duration, // Added
   state,
   yieldActive,
+  apyBps, // Added
   onRefresh,
 }: EscrowCardProps) {
   const { address } = useAppKitAccount();
@@ -57,7 +61,6 @@ export default function EscrowCard({
   const isFreelancer = address?.toLowerCase() === freelancer.toLowerCase();
   const isArbitrator = address?.toLowerCase() === arbitrator.toLowerCase();
 
-  // Fetch allowance & balance when the state is "Created"
   useEffect(() => {
     async function fetchAllowance() {
       if (!walletProvider || !address || state !== EscrowState.Created) return;
@@ -87,10 +90,6 @@ export default function EscrowCard({
     return await provider.getSigner();
   }
 
-  // ─────────────────────────────────────────────
-  //  APPROVE USDC
-  // ─────────────────────────────────────────────
-
   async function handleApprove() {
     if (!walletProvider) return;
     const toastId = toast.loading("Approving USDC...");
@@ -119,10 +118,6 @@ export default function EscrowCard({
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  FUND ESCROW
-  // ─────────────────────────────────────────────
-
   async function handleFund() {
     if (!walletProvider) return;
     const toastId = toast.loading("Funding escrow...");
@@ -150,10 +145,6 @@ export default function EscrowCard({
       setLoadingAction(null);
     }
   }
-
-  // ─────────────────────────────────────────────
-  //  GENERIC ACTION HANDLER
-  // ─────────────────────────────────────────────
 
   async function executeAction(action: string) {
     if (!walletProvider) return;
@@ -213,10 +204,6 @@ export default function EscrowCard({
     }
   }
 
-  // ─────────────────────────────────────────────
-  //  ACTION AVAILABILITY
-  // ─────────────────────────────────────────────
-
   const canFund = isClient && state === EscrowState.Created;
   const hasEnoughAllowance =
     allowance >= BigInt(Math.floor(parseFloat(fundAmount || "0") * 10 ** 6));
@@ -226,10 +213,6 @@ export default function EscrowCard({
   const canDispute =
     (isClient || isFreelancer) && state === EscrowState.InProgress;
   const canResolve = isArbitrator && state === EscrowState.Disputed;
-
-  // ─────────────────────────────────────────────
-  //  RENDER
-  // ─────────────────────────────────────────────
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-md p-6 hover:shadow-lg transition">
@@ -267,23 +250,65 @@ export default function EscrowCard({
         </p>
       </div>
 
-      {/* Yield Info */}
+      {/* Yield Info (Updated with APY and Split) */}
       {yieldActive && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-          <p className="text-xs text-green-800">🧑‍🌾 Earning yield via Aave V3</p>
-          {yieldEarned > 0n && (
-            <p className="text-sm font-semibold text-green-900 mt-1">
-              +{formatUSDC(yieldEarned, 6)} USDC earned
+        <div className="bg-green-950/40 border border-green-900/50 rounded-lg p-4 mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-xs font-medium text-green-400 flex items-center gap-1">
+              🧑‍🌾 Earning Yield via Aave V3
             </p>
+            <span className="text-xs bg-green-900/50 text-green-300 px-2 py-0.5 rounded-full font-mono">
+              {apyBps > 0 ? (apyBps / 100).toFixed(2) : "0.00"}% APY
+            </span>
+          </div>
+
+          {yieldEarned > 0n && (
+            <p className="text-sm font-semibold text-green-300 mb-3">
+              +{formatUSDC(yieldEarned, 6)} USDC total earned
+            </p>
+          )}
+
+          {/* Estimated Split */}
+          {amount > 0n && apyBps > 0 && (
+            <div className="grid grid-cols-2 gap-2 text-xs mt-2 pt-2 border-t border-green-900/50">
+              <div>
+                <p className="text-gray-400">Est. Freelancer (70%)</p>
+                <p className="text-green-300 font-mono">
+                  +
+                  {(
+                    (Number(amount) *
+                      (apyBps / 10000) *
+                      (Number(duration) / 31536000) *
+                      0.7) /
+                    1e6
+                  ).toFixed(6)}{" "}
+                  USDC
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400">Est. Client (30%)</p>
+                <p className="text-green-300 font-mono">
+                  +
+                  {(
+                    (Number(amount) *
+                      (apyBps / 10000) *
+                      (Number(duration) / 31536000) *
+                      0.3) /
+                    1e6
+                  ).toFixed(6)}{" "}
+                  USDC
+                </p>
+              </div>
+            </div>
           )}
         </div>
       )}
 
       {/* Fund Section */}
       {canFund && (
-        <div className="border-t pt-4 mt-4 space-y-3">
+        <div className="border-t border-gray-800 pt-4 mt-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-gray-400 mb-1">
               Amount to fund (USDC)
             </label>
             <input
@@ -292,10 +317,10 @@ export default function EscrowCard({
               step="0.000001"
               value={fundAmount}
               onChange={(e) => setFundAmount(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-0  focus:border-0"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={loading}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Balance: {formatUSDC(usdcBalance)} USDC
             </p>
           </div>
@@ -335,7 +360,6 @@ export default function EscrowCard({
       )}
 
       {/* Action Buttons */}
-
       <div className="flex flex-wrap gap-2 mt-4">
         {canStartWork && (
           <button
@@ -401,10 +425,6 @@ export default function EscrowCard({
     </div>
   );
 }
-
-// ─────────────────────────────────────────────
-//  SMALL SPINNER COMPONENT
-// ─────────────────────────────────────────────
 
 function Spinner() {
   return (
