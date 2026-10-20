@@ -137,16 +137,16 @@ Traditional freelance platforms lock client deposits without generating any valu
 
 | Contract                | Address                                                                                                                         | Explorer |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| **EscrowWithYield**     | [`0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6) | BaseScan |
+| **EscrowWithYield**     | [`0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f`](https://sepolia.basescan.org/address/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f) | BaseScan |
 | **USDC (Circle)**       | [`0x036CbD53842c5426634e7929541eC2318f3dCF7e`](https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e) | BaseScan |
 | **Aave V3 Pool**        | [`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`](https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b) | BaseScan |
 | **aUSDC (aBasSepUSDC)** | [`0xf53B60F4006cab2b3C4688ce41fD5362427A2A66`](https://sepolia.basescan.org/address/0xf53B60F4006cab2b3C4688ce41fD5362427A2A66) | BaseScan |
 
 ### Verified On
 
-- ✅ [BaseScan](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6#code)
-- ✅ [Blockscout](https://base-sepolia.blockscout.com/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6#code)
-- ✅ [Sourcify](https://sourcify.dev/server/repo-ui/84532/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6)
+- ✅ [BaseScan](https://sepolia.basescan.org/address/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f#code)
+- ✅ [Blockscout](https://base-sepolia.blockscout.com/address/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f#code)
+- ✅ [Sourcify](https://sourcify.dev/server/repo-ui/84532/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f)
 
 ---
 
@@ -388,7 +388,7 @@ SEPOLIA_PRIVATE_KEY=0xyour_private_key
 ETHERSCAN_API_KEY=your_etherscan_key
 
 # Deployed contract
-ESCROW_ADDRESS=0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6
+ESCROW_ADDRESS=0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f
 ```
 
 Create `frontend/.env.local`:
@@ -398,7 +398,7 @@ Create `frontend/.env.local`:
 NEXT_PUBLIC_PROJECT_ID=your_walletconnect_project_id
 
 # Deployed escrow contract
-NEXT_PUBLIC_ESCROW_ADDRESS=0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6
+NEXT_PUBLIC_ESCROW_ADDRESS=0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f
 
 # USDC on Base Sepolia (Circle)
 NEXT_PUBLIC_USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
@@ -483,7 +483,7 @@ The complete flow has been tested end-to-end on Base Sepolia. Here's how it work
 pnpm hardhat ignition deploy ignition/modules/EscrowBase.ts --network baseSepolia
 ```
 
-**Deployed at:** `0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`
+**Deployed at:** `0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f`
 
 ### Step 2: Create Escrow
 
@@ -616,7 +616,7 @@ All operations verified on Base Sepolia. Each hash links to BaseScan.
 
 | Contract        | Address                                                                                                                         |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| EscrowWithYield | [`0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6`](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6) |
+| EscrowWithYield | [`0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f`](https://sepolia.basescan.org/address/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f) |
 | Aave V3 Pool    | [`0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b`](https://sepolia.basescan.org/address/0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b) |
 | aUSDC           | [`0xf53B60F4006cab2b3C4688ce41fD5362427A2A66`](https://sepolia.basescan.org/address/0xf53B60F4006cab2b3C4688ce41fD5362427A2A66) |
 | USDC            | [`0x036CbD53842c5426634e7929541eC2318f3dCF7e`](https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e) |
@@ -783,7 +783,7 @@ Running node:test tests
 
 | Milestone                                 | Proof                                                                                       |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Contract deployed to Base Sepolia         | [BaseScan](https://sepolia.basescan.org/address/0x7Ac175B1CC95c7b62F25405EA03Ab1FA8C3fc9C6) |
+| Contract deployed to Base Sepolia         | [BaseScan](https://sepolia.basescan.org/address/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f) |
 | 21 tests passing                          | Local test suite                                                                            |
 | First successful fund with Aave V3        | On-chain transaction                                                                        |
 | Dispute resolution tested (both outcomes) | 4 verified transactions                                                                     |
