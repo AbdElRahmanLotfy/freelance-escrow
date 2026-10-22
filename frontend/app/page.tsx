@@ -17,7 +17,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-950 text-gray-100">
       <div className="bg-blue-950/50 border border-blue-900/50 rounded-lg p-4 mb-6">
         <p className="text-sm text-blue-300">
-          <strong>First time?</strong> Make sure you're on{" "}
+          <strong>First time?</strong> Make sure you are on{" "}
           <strong>Base Sepolia</strong> network in MetaMask. Get free test ETH
           from{" "}
           <a
