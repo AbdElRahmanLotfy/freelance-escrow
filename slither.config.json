@@ -1,0 +1,4 @@
+{
+  "detectors_to_exclude": "reentrancy-no-eth,reentrancy-benign,reentrancy-balance,timestamp,naming-convention,pragma,solc-version,assembly,missing-zero-check,incorrect-equality,shadowing-local,immutable-states,missing-inheritance",
+  "filter_paths": "node_modules|contracts/mocks"
+}
