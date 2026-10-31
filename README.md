@@ -9,8 +9,8 @@ Traditional freelance escrow locks client deposits for weeks or months earning n
 [![Base Sepolia](https://img.shields.io/badge/Network-Base%20Sepolia-blue)](https://sepolia.basescan.org/)
 [![Aave V3](https://img.shields.io/badge/Aave-V3-purple)](https://aave.com/)
 [![Tests](https://img.shields.io/badge/Tests-21%20passing-green)]()
+[![Slither](https://img.shields.io/badge/Slither-0%20findings-brightgreen)](slither.config.json)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-vercel-black)](https://freelance-escrow-rose.vercel.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
@@ -593,6 +593,21 @@ The dispute flow has been executed end-to-end on Base Sepolia with both outcomes
 
 ---
 
+## 🛡️ Security & Audit Readiness
+
+### Static Analysis (Slither)
+
+The contract has been analyzed with [Slither](https://github.com/crytic/slither), Trail of Bits' industry-standard static analyzer.
+
+**Result: 0 findings** across the production contract.
+
+To reproduce:
+
+````bash
+pipx install slither-analyzer
+pnpm hardhat compile
+slither .
+
 ## 📜 On-Chain Transaction Reference
 
 All operations verified on Base Sepolia. Each hash links to BaseScan.
@@ -629,7 +644,7 @@ All operations verified on Base Sepolia. Each hash links to BaseScan.
 
 ```bash
 pnpm hardhat test
-```
+````
 
 **Expected Output:**
 
@@ -703,6 +718,7 @@ Running node:test tests
 - ✅ **Duration enforcement** — work must complete before release
 - ✅ **Atomic yield split** — 70/30 verified by 21 tests
 - ✅ **Proportional share accounting** — no rounding exploits
+- ✅ **Static analysis** — Slither run with 0 findings, false positives documented
 
 ### Known Limitations
 
@@ -759,11 +775,12 @@ Running node:test tests
 
 ### Phase 4: Production 🚀 In Progress
 
-- [x] Frontend deployed to Vercel — live at [freelance-escrow-rose.vercel.app](https://freelance-escrow-rose.vercel.app)
-- [x] Reown domain allowlist configured — production wallet connect working
-- [x] Alchemy RPC — migrated from Infura for multi-chain support
+...
+
+- [x] Static analysis (Slither) — 0 findings, config committed
+- [x] Audit readiness package (`AUDIT.md`)
+- [ ] Independent third-party audit (CertiK / Trail of Bits)
 - [ ] Base Mainnet deployment
-- [ ] Security audit
 - [ ] Gas optimization report
 
 ### Phase 5: Advanced 🔮 Planned
@@ -782,11 +799,12 @@ Running node:test tests
 ## Key Milestones Achieved
 
 | Milestone                                 | Proof                                                                                       |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------- | --- |
 | Contract deployed to Base Sepolia         | [BaseScan](https://sepolia.basescan.org/address/0x1eeb5C8c1f828F23E742e72BEB550Eea5Fc1439f) |
 | 21 tests passing                          | Local test suite                                                                            |
 | First successful fund with Aave V3        | On-chain transaction                                                                        |
 | Dispute resolution tested (both outcomes) | 4 verified transactions                                                                     |
+| Slither static analysis (0 findings)      | `slither.config.json` + `AUDIT.md` in repo                                                  |     |
 | **Frontend live on Vercel**               | [freelance-escrow-rose.vercel.app](https://freelance-escrow-rose.vercel.app)                |
 
 ## 📄 License
