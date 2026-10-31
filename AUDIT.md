@@ -37,5 +37,7 @@ The following must always hold true:
 The project includes a `slither.config.json` file. To reproduce the static analysis:
 
 ```bash
+pipx install slither-analyzer
+pnpm hardhat compile
 slither .
 ```
