@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { Contract } from "ethers";
 import { getBrowserProvider } from "@/lib/contract";
@@ -29,6 +29,7 @@ interface EscrowData {
 
 export default function EscrowList() {
   const { address, isConnected } = useAppKitAccount();
+  const isFetching = useRef(false);
   const { walletProvider } = useAppKitProvider("eip155");
   const [escrows, setEscrows] = useState<EscrowData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,10 +38,17 @@ export default function EscrowList() {
   const [sort, setSort] = useState<"newest" | "oldest" | "amount">("newest");
 
   const fetchEscrows = useCallback(async () => {
-    if (!isConnected || !walletProvider || !address) return;
+    if (!isConnected || !walletProvider || !address || isFetching.current) {
+      return;
+    }
+
+    const userAddress = address.toLowerCase();
+
+    isFetching.current = true;
 
     try {
       setLoading(true);
+
       const provider = getBrowserProvider(walletProvider);
 
       // 1. Fetch APY directly from Aave Pool
@@ -52,28 +60,35 @@ export default function EscrowList() {
           ],
           provider,
         );
+
         const data = await aavePool.getReserveData(USDC_ADDRESS);
-        // Aave returns APY in Ray (1e27). We divide by 1e25 to get human-readable % (e.g., 500 = 5.00%)
+
+        // Aave APY is returned in Ray (1e27).
+        // Convert to basis points.
         const apyPercentage = Number(data[2]) / 1e25;
+
         setCurrentApyBps(Math.round(apyPercentage * 100));
       } catch (err) {
-        console.error("Failed to fetch APY directly from Aave", err);
+        console.error("Failed to fetch APY directly from Aave:", err);
         setCurrentApyBps(0);
       }
 
       // 2. Fetch Escrows from our contract
       const escrow = new Contract(ESCROW_ADDRESS, EscrowABI.abi, provider);
+
       const counter = await escrow.escrowCounter();
+
       const userEscrows: EscrowData[] = [];
 
       for (let i = 0; i < Number(counter); i++) {
         const details = await escrow.getEscrow(i);
+
         const client = details.client as string;
         const freelancer = details.freelancer as string;
 
         if (
-          client.toLowerCase() === address.toLowerCase() ||
-          freelancer.toLowerCase() === address.toLowerCase()
+          client.toLowerCase() === userAddress ||
+          freelancer.toLowerCase() === userAddress
         ) {
           userEscrows.push({
             id: i,
@@ -82,7 +97,7 @@ export default function EscrowList() {
             arbitrator: details.arbitrator as string,
             amount: details.amount as bigint,
             yieldEarned: details.yieldEarned as bigint,
-            duration: details.duration as bigint, // <-- Added
+            duration: details.duration as bigint,
             state: Number(details.state),
             yieldActive: details.yieldActive as boolean,
           });
@@ -93,18 +108,24 @@ export default function EscrowList() {
     } catch (error) {
       console.error("Failed to fetch escrows:", error);
     } finally {
+      isFetching.current = false;
       setLoading(false);
     }
   }, [isConnected, walletProvider, address]);
 
   useEffect(() => {
-    fetchEscrows();
+    const timeout = setTimeout(() => {
+      fetchEscrows();
+    }, 0);
 
     const interval = setInterval(() => {
       fetchEscrows();
     }, 15000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [fetchEscrows]);
 
   if (!isConnected) {
@@ -214,7 +235,9 @@ export default function EscrowList() {
         </div>
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
+          onChange={(e) =>
+            setSort(e.target.value as "newest" | "oldest" | "amount")
+          }
           className="px-3 py-1 text-sm bg-gray-800 border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="newest">Newest first</option>

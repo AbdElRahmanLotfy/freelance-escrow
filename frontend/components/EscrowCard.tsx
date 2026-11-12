@@ -36,6 +36,28 @@ interface EscrowCardProps {
   onRefresh: () => void;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const reason =
+      "reason" in error && typeof error.reason === "string"
+        ? error.reason
+        : undefined;
+
+    return reason || error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "reason" in error &&
+    typeof error.reason === "string"
+  ) {
+    return error.reason;
+  }
+
+  return "Transaction failed";
+}
+
 export default function EscrowCard({
   id,
   client,
@@ -107,9 +129,9 @@ export default function EscrowCard({
       setAllowance(newAllowance);
 
       toast.success("USDC approved!", { id: toastId });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.reason || error.message || "Approval failed", {
+      toast.error(getErrorMessage(error) || "Approval failed", {
         id: toastId,
       });
     } finally {
@@ -135,9 +157,9 @@ export default function EscrowCard({
 
       toast.success(`${fundAmount} USDC funded!`, { id: toastId });
       onRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.reason || error.message || "Fund failed", {
+      toast.error(getErrorMessage(error) || "Fund failed", {
         id: toastId,
       });
     } finally {
@@ -193,9 +215,9 @@ export default function EscrowCard({
         toast.success(successMessage, { id: toastId });
         onRefresh();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.reason || error.message || "Transaction failed", {
+      toast.error(getErrorMessage(error) || "Transaction failed", {
         id: toastId,
       });
     } finally {

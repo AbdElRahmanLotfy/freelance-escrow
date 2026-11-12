@@ -73,6 +73,26 @@ describe("EscrowWithYield", async function () {
     };
   }
 
+  type EscrowContract = Awaited<
+    ReturnType<typeof deployEscrowFixture>
+  >["escrow"];
+
+  // Read the total number of escrows as bigint.
+  async function getEscrowCount(escrow: EscrowContract): Promise<bigint> {
+    return (await escrow.read.getEscrowCount()) as bigint;
+  }
+
+  // Read the escrow's principal, current value, and current yield.
+  async function getEscrowYieldValue(
+    escrow: EscrowContract,
+    escrowId: bigint,
+  ): Promise<readonly [bigint, bigint, bigint]> {
+    return (await escrow.read.getEscrowYieldValue([escrowId])) as readonly [
+      bigint,
+      bigint,
+      bigint,
+    ];
+  }
   async function createAndFundEscrow(
     fixture: Awaited<ReturnType<typeof deployEscrowFixture>>,
     amount: bigint,
@@ -88,7 +108,7 @@ describe("EscrowWithYield", async function () {
       { account: client.account },
     );
 
-    const escrowId = (await escrow.read.getEscrowCount()) - 1n;
+    const escrowId = (await getEscrowCount(escrow)) - 1n;
 
     await mockUSDC.write.approve([escrow.address, amount], {
       account: client.account,
@@ -187,7 +207,11 @@ describe("EscrowWithYield", async function () {
     await simulateYield(fixture, yieldAmount);
 
     const [calculatedPrincipal, currentValue, currentYield] =
-      await fixture.escrow.read.getEscrowYieldValue([escrowId]);
+      (await fixture.escrow.read.getEscrowYieldValue([escrowId])) as readonly [
+        bigint,
+        bigint,
+        bigint,
+      ];
 
     assert.equal(calculatedPrincipal, principal);
     assert.equal(currentValue, USDC("1100"));
@@ -235,19 +259,21 @@ describe("EscrowWithYield", async function () {
 
     await networkHelpers.time.increase(Number(WEEK));
 
-    const freelancerBefore = await mockUSDC.read.balanceOf([
+    const freelancerBefore = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
-    const clientBefore = await mockUSDC.read.balanceOf([
+    ])) as bigint;
+    const clientBefore = (await mockUSDC.read.balanceOf([
       client.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.releasePayment([escrowId], { account: client.account });
 
-    const freelancerAfter = await mockUSDC.read.balanceOf([
+    const freelancerAfter = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
-    const clientAfter = await mockUSDC.read.balanceOf([client.account.address]);
+    ])) as bigint;
+    const clientAfter = (await mockUSDC.read.balanceOf([
+      client.account.address,
+    ])) as bigint;
 
     assert.equal(freelancerAfter - freelancerBefore, USDC("1070"));
     assert.equal(clientAfter - clientBefore, USDC("30"));
@@ -278,15 +304,15 @@ describe("EscrowWithYield", async function () {
 
     await networkHelpers.time.increase(Number(WEEK));
 
-    const freelancerBefore = await mockUSDC.read.balanceOf([
+    const freelancerBefore = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.releasePayment([escrowId], { account: client.account });
 
-    const freelancerAfter = await mockUSDC.read.balanceOf([
+    const freelancerAfter = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
+    ])) as bigint;
 
     assert.equal(freelancerAfter - freelancerBefore, principal);
 
@@ -314,13 +340,15 @@ describe("EscrowWithYield", async function () {
 
     await simulateYield(fixture, yieldAmount);
 
-    const clientBefore = await mockUSDC.read.balanceOf([
+    const clientBefore = (await mockUSDC.read.balanceOf([
       client.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.refundClient([escrowId], { account: client.account });
 
-    const clientAfter = await mockUSDC.read.balanceOf([client.account.address]);
+    const clientAfter = (await mockUSDC.read.balanceOf([
+      client.account.address,
+    ])) as bigint;
 
     assert.equal(clientAfter - clientBefore, principal + yieldAmount);
 
@@ -347,13 +375,15 @@ describe("EscrowWithYield", async function () {
 
     await escrow.write.startWork([escrowId], { account: client.account });
 
-    const clientBefore = await mockUSDC.read.balanceOf([
+    const clientBefore = (await mockUSDC.read.balanceOf([
       client.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.refundClient([escrowId], { account: client.account });
 
-    const clientAfter = await mockUSDC.read.balanceOf([client.account.address]);
+    const clientAfter = (await mockUSDC.read.balanceOf([
+      client.account.address,
+    ])) as bigint;
 
     assert.equal(clientAfter - clientBefore, principal);
 
@@ -405,23 +435,23 @@ describe("EscrowWithYield", async function () {
 
     await escrow.write.raiseDispute([escrowId], { account: client.account });
 
-    const arbitratorBefore = await mockUSDC.read.balanceOf([
+    const arbitratorBefore = (await mockUSDC.read.balanceOf([
       arbitrator.account.address,
-    ]);
-    const freelancerBefore = await mockUSDC.read.balanceOf([
+    ])) as bigint;
+    const freelancerBefore = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.resolveDispute([escrowId, freelancer.account.address], {
       account: arbitrator.account,
     });
 
-    const arbitratorAfter = await mockUSDC.read.balanceOf([
+    const arbitratorAfter = (await mockUSDC.read.balanceOf([
       arbitrator.account.address,
-    ]);
-    const freelancerAfter = await mockUSDC.read.balanceOf([
+    ])) as bigint;
+    const freelancerAfter = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
+    ])) as bigint;
 
     assert.equal(arbitratorAfter - arbitratorBefore, USDC("10"));
     assert.equal(freelancerAfter - freelancerBefore, USDC("1090"));
@@ -453,15 +483,17 @@ describe("EscrowWithYield", async function () {
 
     await escrow.write.raiseDispute([escrowId], { account: client.account });
 
-    const clientBefore = await mockUSDC.read.balanceOf([
+    const clientBefore = (await mockUSDC.read.balanceOf([
       client.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.resolveDispute([escrowId, client.account.address], {
       account: arbitrator.account,
     });
 
-    const clientAfter = await mockUSDC.read.balanceOf([client.account.address]);
+    const clientAfter = (await mockUSDC.read.balanceOf([
+      client.account.address,
+    ])) as bigint;
 
     assert.equal(clientAfter - clientBefore, USDC("1090"));
 
@@ -494,8 +526,8 @@ describe("EscrowWithYield", async function () {
 
     await simulateYield(fixture, USDC("300"));
 
-    const [, value0, yield0] = await escrow.read.getEscrowYieldValue([0n]);
-    const [, value1, yield1] = await escrow.read.getEscrowYieldValue([1n]);
+    const [, value0, yield0] = await getEscrowYieldValue(escrow, 0n);
+    const [, value1, yield1] = await getEscrowYieldValue(escrow, 1n);
 
     assert.equal(value0, USDC("1100"));
     assert.equal(yield0, USDC("100"));
@@ -532,8 +564,10 @@ describe("EscrowWithYield", async function () {
     assert.equal(await escrow.read.getTotalYieldPrincipal(), amount2);
     assert.equal(await escrow.read.getTotalScaledATokenShares(), amount2);
 
-    const [, remainingValue, remainingYield] =
-      await escrow.read.getEscrowYieldValue([1n]);
+    const [, remainingValue, remainingYield] = await getEscrowYieldValue(
+      escrow,
+      1n,
+    );
 
     assert.equal(remainingValue, USDC("2200"));
     assert.equal(remainingYield, USDC("200"));
@@ -670,19 +704,21 @@ describe("EscrowWithYield", async function () {
     await simulateYield(fixture, yieldAmount);
     await networkHelpers.time.increase(Number(WEEK));
 
-    const freelancerBefore = await mockUSDC.read.balanceOf([
+    const freelancerBefore = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
-    const clientBefore = await mockUSDC.read.balanceOf([
+    ])) as bigint;
+    const clientBefore = (await mockUSDC.read.balanceOf([
       client.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.releasePayment([escrowId], { account: client.account });
 
-    const freelancerAfter = await mockUSDC.read.balanceOf([
+    const freelancerAfter = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
-    const clientAfter = await mockUSDC.read.balanceOf([client.account.address]);
+    ])) as bigint;
+    const clientAfter = (await mockUSDC.read.balanceOf([
+      client.account.address,
+    ])) as bigint;
 
     // (1 * 70) / 100 = 0 → freelancer gets no bonus
     // clientDiscount = 1 - 0 = 1 → client gets 1 wei
@@ -715,19 +751,21 @@ describe("EscrowWithYield", async function () {
     await simulateYield(fixture, yieldAmount);
     await networkHelpers.time.increase(Number(WEEK));
 
-    const freelancerBefore = await mockUSDC.read.balanceOf([
+    const freelancerBefore = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
-    const clientBefore = await mockUSDC.read.balanceOf([
+    ])) as bigint;
+    const clientBefore = (await mockUSDC.read.balanceOf([
       client.account.address,
-    ]);
+    ])) as bigint;
 
     await escrow.write.releasePayment([escrowId], { account: client.account });
 
-    const freelancerAfter = await mockUSDC.read.balanceOf([
+    const freelancerAfter = (await mockUSDC.read.balanceOf([
       freelancer.account.address,
-    ]);
-    const clientAfter = await mockUSDC.read.balanceOf([client.account.address]);
+    ])) as bigint;
+    const clientAfter = (await mockUSDC.read.balanceOf([
+      client.account.address,
+    ])) as bigint;
 
     // (10 * 70) / 100 = 7 → freelancer
     // 10 - 7 = 3 → client
