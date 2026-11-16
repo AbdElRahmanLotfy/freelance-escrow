@@ -2,13 +2,18 @@
   "name": "freelance-escrow",
   "version": "1.0.0",
   "type": "module",
+
+
+  
+ 
   "scripts": {
     "test": "hardhat test",
     "test:verbose": "hardhat test --verbose",
     "deploy:sepolia": "hardhat ignition deploy ignition/modules/Escrow.ts --network sepolia",
     "deploy:base": "hardhat ignition deploy ignition/modules/EscrowBase.ts --network baseSepolia",
+    "deploy:milestone": "hardhat ignition deploy ignition/modules/MilestoneEscrow.ts --network baseSepolia",
     "verify:sepolia": "hardhat ignition verify --network sepolia",
-    "verify:base": "hardhat ignition verify --network baseSepolia",
+    "verify:base": "hardhat ignition verify chain-84532 --network baseSepolia",
     "check-balance": "hardhat run scripts/check-balance.ts --network baseSepolia",
     "approve": "hardhat run scripts/approve-usdc.ts --network baseSepolia",
     "create-escrow": "hardhat run scripts/create-escrow.ts --network baseSepolia",

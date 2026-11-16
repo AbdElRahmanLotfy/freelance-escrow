@@ -5,6 +5,7 @@ import ConnectButton from "@/components/ConnectButton";
 import EscrowStats from "@/components/EscrowStats";
 import CreateEscrowForm from "@/components/CreateEscrowForm";
 import EscrowList from "@/components/EscrowList";
+import Link from "next/dist/client/link";
 
 export default function Home() {
   const refreshRef = useRef<(() => void) | null>(null);
@@ -42,9 +43,17 @@ export default function Home() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8 max-md:flex-wrap max-md:gap-5">
           <div>
-            <h1 className="text-3xl font-bold text-white">
-              🏗️ Freelance Escrow
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-white">
+                🏗️ Freelance Escrow
+              </h1>
+              <Link
+                href="/milestones"
+                className="text-xs bg-blue-900/50 text-blue-300 px-2 py-1 rounded-full hover:bg-blue-800/50 transition"
+              >
+                Try Milestone Escrow →
+              </Link>
+            </div>
             <p className="text-sm text-gray-400 mt-1">
               Decentralized escrow with automatic yield
             </p>

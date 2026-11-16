@@ -1,3 +1,4 @@
 {
-  "MilestoneEscrowModule#MilestoneEscrow": "0x89D3CD717441F79BAA6C68d57a8d336e9a19A93f"
+  "EscrowBaseModule#EscrowWithYield": "0x86be0245212EDc8CCf29acdA144bc14d70db9b42",
+  "MilestoneEscrowModule#MilestoneEscrow": "0x2b2968551B5B669A2205d755aeAb025f8af209Bc"
 }
